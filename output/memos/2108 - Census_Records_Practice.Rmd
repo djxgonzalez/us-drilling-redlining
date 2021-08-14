@@ -1,0 +1,34 @@
+---
+title: "2108 - Census_Records_Practice"
+author: "Danesha Byron"
+date: "8/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# first set up the environment; we need the `tidyverse` and `sf` packages
+source("../../code/0-setup/1-setup.R")
+```
+
+
+```{r data_input, echo = FALSE}
+# since we're in a notebook in the `output/memos/` folder, we need to we use the
+# `..` to tell R to go up a level in the folders, i.e., to the root directory,
+# then we can go into the data folder
+wells <- readRDS("../../data/interim/enverus_wells_interim.rds")
+
+# this is how we input shapefiles using the sf function `st_read`, just point
+# it to the .shp file
+holc <- st_read("../../data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp")
+
+census_cal <- st_read("../../data/raw/us_census/cal_counties.shp")
+census
+
+```
+
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

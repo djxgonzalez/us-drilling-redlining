@@ -1,0 +1,271 @@
+---
+title: "2607 - LA_Mapping"
+author: "Danesha Byron"
+date: "7/26/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# first set up the environment; we need the `tidyverse` and `sf` packages
+source("../../code/0-setup/1-setup.R")
+```
+
+
+
+```{r data_input, include=FALSE}
+# since we're in a notebook in the `output/memos/` folder, we need to we use the
+# `..` to tell R to go up a level in the folders, i.e., to the root directory,
+# then we can go into the data folder
+wells <- readRDS("../../data/interim/enverus_wells_interim.rds")
+
+
+# this is how we input shapefiles using the sf function `st_read`, just point
+# it to the .shp file
+holc <- st_read("../../data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp")
+```
+
+
+
+
+```{r, echo=FALSE}
+#alright, now let's map the HOLC polygons in Los Angeles
+# first, we filter to holc dataset to Los Angeles
+holc_la <- holc %>% filter(city == "Los Angeles")
+# next we make the map and set the fill color to match the grade--check it out!
+ggplot() +
+  geom_sf(data = holc_la, aes(fill = holc_grade)) +
+   scale_fill_manual(values=c("green", "blue", "yellow", "red")) +
+  theme_bw()
+```
+
+
+
+```{r, echo=FALSE}
+#Converts well data into Lat/Long and filters out the unnecessary wells.
+#Filtered for wells only in LA.
+wells_la <- wells %>% filter(county_parish == "LOS ANGELES (CA)") %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = st_crs(crs_nad83))  %>%
+  ##This point is actually in Bay Area, filtered out of dataset.
+  filter (api_number != "04037999990000")
+
+ggplot() +
+  geom_sf(data = holc_la, aes(fill = holc_grade, color = NA)) +
+  scale_fill_manual(values=c("green", "blue", "yellow", "red")) +
+  geom_sf(data = wells_la, shape = 4, alpha = 0.05) +
+  geom_sf(data = holc_la, aes(color = holc_grade, fill = NA), lwd = 0.3) +
+  scale_color_manual(values=c("green", "blue", "yellow", "red")) +
+  ylim(33.7, 34.3) + xlim(-118.4, -118.2) +
+  theme_bw()
+```
+
+
+
+
+```{r, echo=false}
+#Working to generate a 10 km buffer around HOLC neighborhoods
+
+#Buffer creates a circle around each neighborhood 10K. (From the boundary of each neighborhood)
+holc_la_buff_10k <- holc_la %>%
+  st_transform(crs_projected)%>% #flattens holc_la
+  st_buffer(dist = 10000)  %>% #distance is in meters
+  st_transform(crs_nad83) %>% #unflattens holc_la
+  st_union() #this unites polygons into one.
+
+d <- st_intersection(wells_la,holc_la_buff_10k)  #takes all of the wells from La County and buffered data to see how close they are.
+ #22455 are within the first 10K of the boundaries.
+
+total_intersected_w_h = nrow(d)
+#22455
+
+
+
+
+
+```
+
+
+Identifies the centroids for each neighborhood in LA
+
+```{r, echo=FALSE}
+la_centroid = holc_la %>%
+  st_transform(crs_projected) %>%
+  st_buffer(dist = 0) %>%
+  st_transform(crs_nad83) %>%
+  st_centroid()
+```
+
+Restricts to wells drilled before 1935
+
+```{r, echo = false}
+#Reminder, this is d, taken from above within the code.
+
+#d <- st_intersection(wells_la,holc_la_buff_10k)  #takes all of the wells from La County and buffered data to see how close they are.
+ #22455 are within the first 10K of the boundaries.
+
+la_pre1935 <- d %>% filter(completion_date <= as.Date("1934-12-31"))
+summary(la_pre1935)
+```
+
+
+Identifies neighborhoods that are graded C or D and sorts by # of wells that intersect
+
+```{r echo=FALSE}
+# take the full HOLC map for LA
+holc_la2 <- holc_la %>%
+  # match the crs's
+  st_transform(st_crs(wells_la)) %>%
+  # restrict to neighborhoods graded C or D
+  filter(holc_grade == "D")
+holc_la2 %>%
+  # count the number of wells that intersect with those neighborhoods
+  mutate(n_wells = sum(lengths(st_intersects(wells_la, holc_la2)))) %>%
+  select(n_wells)
+  # identify one or two neighborhodos by `holc_id` that could be good examples
+```
+
+
+Takes centroid for one neighboorhood and compares to interesction
+
+```{r}
+
+## Goal: Create a buffer and a centroid around 1 neighborhood in LA County
+neighborhood_test5<- holc_la %>% filter(holc_id == 'D1') %>%
+  st_centroid() %>%
+  st_transform(crs_projected)%>% #flattens holc_la
+  st_buffer(dist = 1000)  %>% #distance is in meters
+  st_transform(crs_nad83) #unflattens holc_la
+
+#this is the shapefile of the neighborhood
+neighborhood_test5_noncentroid<- holc_la %>% filter(holc_id == 'D1') %>%
+  st_transform(crs_projected)%>% #flattens holc_la
+  st_transform(crs_nad83) #unflattens holc_la
+
+
+#Copy all of these items into the console to view the neighborhood shapefile, centroid, and wells nearby within a 1K buffer.
+plot(st_geometry(neighborhood_test5_noncentroid))
+plot(st_geometry(neighborhood_test5))
+plot(st_geometry(neighborhood_test5), add = TRUE)
+plot(st_geometry(d), add = TRUE)
+
+
+```
+
+
+Look at How many wells are within 1K of A.B,C,D  
+
+```{r}
+#Creates 1K buffer around centroid of HOLC
+
+holc_la_1k<- holc_la %>%
+  st_transform(crs_projected)%>% #flattens holc_la
+  st_buffer(dist = 1000)  %>% #distance is in meters
+  st_transform(crs_nad83) %>%  #unflattens holc_la
+  #st_centroid() I don't think I need a centroid for the analysis
+
+ # match the crs's
+  #st_transform(st_crs(wells_la)) %>%
+
+
+#I had to try remove pikes on function to get them appear in environment
+holc_la_1k_A<- holc_la_1k %>% filter(holc_grade == 'A') %>% #remove pike, run, put pike back run
+  mutate(n_wells = sum(lengths(st_intersects(wells_la, holc_la_1k_A)))) %>%
+  select(n_wells)
+holc_la_1k_B<- holc_la_1k %>% filter(holc_grade == 'B') %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la, holc_la_1k_B)))) %>%
+  select(n_wells)
+holc_la_1k_C<- holc_la_1k %>% filter(holc_grade == 'C') %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la, holc_la_1k_C)))) %>%
+  select(n_wells)
+holc_la_1k_D<- holc_la_1k %>% filter(holc_grade == 'D') %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la, holc_la_1k_D))))
+  select(n_wells)
+```
+
+
+
+Look at How many wells are within 1K of A,B,C,D before 1935
+
+```{r}
+holc_la_1k<- holc_la %>%
+  st_transform(crs_projected)%>% #flattens holc_la
+  st_buffer(dist = 1000)  %>% #distance is in meters
+  st_transform(crs_nad83)   #unflattens holc_la
+
+
+wells_la_pre1935 <- wells_la %>% filter(completion_date <= as.Date("1934-12-31"))
+
+#Type into console
+nrow(wells_la_pre1935) #There are 399 wells in LA pre-1935
+
+
+
+#I had to try remove pikes on function to get them appear in environment
+holc_la_1k_A_pre_1935<- holc_la_1k %>% filter(holc_grade == 'A') %>%  #remove pike, run, put pike back run
+  mutate(n_wells = sum(lengths(st_intersects(wells_la_pre1935, holc_la_1k_A_pre_1935))))
+  select(n_wells)
+holc_la_1k_B_pre_1935<- holc_la_1k %>% filter(holc_grade == 'B') %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la_pre1935, holc_la_1k_B_pre_1935)))) %>%
+  select(n_wells)
+holc_la_1k_C_pre_1935<- holc_la_1k %>% filter(holc_grade == 'C') %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la_pre1935, holc_la_1k_C_pre_1935)))) %>%
+  select(n_wells)
+holc_la_1k_D_pre_1935<- holc_la_1k %>% filter(holc_grade == 'D') %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la_pre1935, holc_la_1k_D_pre_1935))))
+  select(n_wells)
+```
+
+
+Look at How many wells are within 1K of A.B,C,D after 1935.
+
+```{r}
+holc_la_1k<- holc_la %>%
+  st_transform(crs_projected)%>% #flattens holc_la
+  st_buffer(dist = 1000)  %>% #distance is in meters
+  st_transform(crs_nad83) %>%  #unflattens holc_la
+
+
+#Find the wells in LA post-1935
+wells_la_post1935 <- wells_la %>% filter(completion_date >= as.Date("1934-12-31"))
+
+
+
+
+#I had to try remove pikes on function to get them appear in environment
+holc_la_1k_A_post1935<- holc_la_1k %>% filter(holc_grade == 'A') %>% #remove pike, run, put pike back run
+  mutate(n_wells = sum(lengths(st_intersects(wells_la_post1935, holc_la_1k_A_post1935)))) %>%
+  select(n_wells)
+holc_la_1k_B_post1935<- holc_la_1k %>% filter(holc_grade == 'B') %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la_post1935, holc_la_1k_B_post1935)))) %>%
+  select(n_wells)
+holc_la_1k_C_post1935<- holc_la_1k %>% filter(holc_grade == 'C') %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la_post1935, holc_la_1k_C_post1935)))) %>%
+  select(n_wells)
+holc_la_1k_D_post1935<- holc_la_1k %>% filter(holc_grade == 'D') %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la_post1935, holc_la_1k_D_post1935))))
+  select(n_wells)
+```
+
+
+
+
+Count the number of wells pre-1935 (before 1935) and post-1935 (after 1935)
+
+```{r}
+
+#Finds the wells in LA pre-1935
+wells_la_pre1935 <- wells_la %>% filter(completion_date <= as.Date("1934-12-31"))
+summary(wells_la_pre1935)
+
+#Type into console
+nrow(wells_la_pre1935) #There are 399 wells in LA pre-1935
+
+#Find the wells in LA post-1935
+wells_la_post1935 <- wells_la %>% filter(completion_date >= as.Date("1934-12-31"))
+summary(wells_la_post1935)
+
+#Type into console
+nrow(wells_la_post1935) #There are 14583 wells in LA post-1935
+
+
+
+```

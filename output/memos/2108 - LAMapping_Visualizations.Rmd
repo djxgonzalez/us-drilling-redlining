@@ -1,0 +1,225 @@
+---
+title: "LA Mapping Visualizations"
+output: html_notebook
+---
+
+
+```{r setup, include=FALSE}
+# first set up the environment; we need the `tidyverse` and `sf` packages
+source("../../code/0-setup/1-setup.R")
+```
+
+
+```{r}
+# since we're in a notebook in the `output/memos/` folder, we need to we use the
+# `..` to tell R to go up a level in the folders, i.e., to the root directory,
+# then we can go into the data folder
+wells <- readRDS("../../data/interim/enverus_wells_interim.rds")
+
+
+# this is how we input shapefiles using the sf function `st_read`, just point
+# it to the .shp file
+holc <- st_read("../../data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp")
+```
+
+
+
+
+
+Filtering Data
+
+```{r}
+
+holc_la <- holc %>% filter(city == "Los Angeles")%>%
+  ##This point is filtered because there's a mix-match with the vertices, which
+  ##causes a error-code. 
+  filter (neighborho != "7744") 
+
+wells_la <- wells %>% filter(county_parish == "LOS ANGELES (CA)") %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = st_crs(crs_nad83))  %>%
+  ##This point is actually in Bay Area, filtered out of dataset. 
+  filter (api_number != "04037999990000")
+```
+
+
+
+
+Look at How many wells are within 1K of A.B,C,D  
+
+```{r}
+#Creates 1K buffer around centroid of HOLC
+
+holc_la_1k<- holc_la %>%
+  st_centroid() %>%
+  st_transform(crs_projected)%>% #flattens holc_la
+  st_buffer(dist = 1000)  %>% #distance is in meters
+  st_transform(crs_nad83)   #unflattens holc_la
+  
+
+holc_la_1k_A<- holc_la_1k %>% filter(holc_grade == 'A') 
+holc_la_1k_A<- holc_la_1k %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la, holc_la_1k_A)))) %>%
+  select(n_wells) 
+
+holc_la_1k_B<- holc_la_1k %>% filter(holc_grade == 'B') 
+holc_la_1k_B<- holc_la_1k %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la, holc_la_1k_B)))) %>%
+  select(n_wells) 
+
+holc_la_1k_C<- holc_la_1k %>% filter(holc_grade == 'C')
+holc_la_1k_C<- holc_la_1k %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la, holc_la_1k_C)))) %>%
+  select(n_wells) 
+
+holc_la_1k_D<- holc_la_1k %>% filter(holc_grade == 'D') 
+holc_la_1k_D<- holc_la_1k %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la, holc_la_1k_D))))
+  select(n_wells) 
+```
+
+
+Look at How many wells are within 1K of the centroid of A.B,C,D after 1935. 
+
+
+```{r data_input, echo = FALSE}
+holc_la_1k<- holc_la %>%
+  st_centroid() %>%
+  st_transform(crs_projected)%>% #flattens holc_la
+  st_buffer(dist = 1000)  %>% #distance is in meters
+  st_transform(crs_nad83)   #unflattens holc_la
+  
+
+#Find the wells in LA post-1935
+wells_la_post1935 <- wells_la %>% filter(completion_date >= as.Date("1934-12-31"))
+    
+
+
+holc_la_1k_A_post1935<- holc_la_1k %>% filter(holc_grade == 'A') 
+holc_la_1k_A_post1935<- holc_la_1k %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la_post1935, holc_la_1k_A_post1935)))) %>% 
+  select(n_wells) 
+
+holc_la_1k_B_post1935<- holc_la_1k %>% filter(holc_grade == 'B')
+holc_la_1k_B_post1935<- holc_la_1k %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la_post1935, holc_la_1k_B_post1935)))) %>%
+  select(n_wells) 
+
+holc_la_1k_C_post1935<- holc_la_1k %>% filter(holc_grade == 'C') 
+holc_la_1k_C_post1935<- holc_la_1k %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la_post1935, holc_la_1k_C_post1935)))) %>%
+  select(n_wells) 
+
+holc_la_1k_D_post1935<- holc_la_1k %>% filter(holc_grade == 'D')  
+holc_la_1k_D_post1935<- holc_la_1k %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la_post1935, holc_la_1k_D_post1935)))) %>%
+  select(n_wells) 
+
+```
+
+
+
+Look at How many wells are within 1K of A,B,C,D before 1935
+
+```{r}
+holc_la_1k<- holc_la %>%
+  st_centroid() %>%
+  st_transform(crs_projected)%>% #flattens holc_la
+  st_buffer(dist = 1000)  %>% #distance is in meters
+  st_transform(crs_nad83)   #unflattens holc_la
+ 
+
+wells_la_pre1935 <- wells_la %>% filter(completion_date <= as.Date("1934-12-31"))
+
+#Type into console
+nrow(wells_la_pre1935) #There are 399 wells in LA pre-1935
+
+    
+
+
+holc_la_1k_A_pre_1935<- holc_la_1k %>% filter(holc_grade == 'A')
+  holc_la_1k_A_pre_1935<- holc_la_1k %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la_pre1935, holc_la_1k_A_pre_1935)))) 
+  select(n_wells) 
+  
+holc_la_1k_B_pre_1935<- holc_la_1k %>% filter(holc_grade == 'B') 
+holc_la_1k_B_pre_1935<- holc_la_1k %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la_pre1935, holc_la_1k_B_pre_1935)))) %>%
+  select(n_wells) 
+
+holc_la_1k_C_pre_1935<- holc_la_1k %>% filter(holc_grade == 'C') 
+holc_la_1k_C_pre_1935<- holc_la_1k %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la_pre1935, holc_la_1k_C_pre_1935)))) %>%
+  select(n_wells) 
+
+
+holc_la_1k_D_pre_1935<- holc_la_1k %>% filter(holc_grade == 'D')
+holc_la_1k_D_pre_1935<- holc_la_1k %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la_pre1935, holc_la_1k_D_pre_1935))))
+  select(n_wells) 
+
+```
+
+
+
+
+
+Look at How many wells are within 1K of A.B,C,D  
+
+```{r}
+#Creates 1K buffer around centroid of HOLC
+
+holc_la_1k<- holc_la %>%
+  st_transform(crs_projected)%>% #flattens holc_la
+  st_centroid() %>%
+  st_buffer(dist = 1000)  %>% #distance is in meters
+  st_transform(crs_nad83)   #unflattens holc_la
+
+holc_la_1k_A<- holc_la_1k %>% filter(holc_grade == 'A') 
+holc_la_1k_A<- holc_la_1k_A %>% 
+  mutate(n_wells = sum(lengths(st_intersects(wells_la, holc_la_1k_A)))) %>%
+  select(n_wells) 
+
+holc_la_1k_B<- holc_la_1k %>% filter(holc_grade == 'B')
+holc_la_1k_B<- holc_la_1k %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la, holc_la_1k_B)))) %>%
+  select(n_wells) 
+
+holc_la_1k_C<- holc_la_1k %>% filter(holc_grade == 'C') 
+holc_la_1k_C<- holc_la_1k %>%  
+  mutate(n_wells = sum(lengths(st_intersects(wells_la, holc_la_1k_C)))) %>%
+  select(n_wells) 
+
+holc_la_1k_D<- holc_la_1k %>% filter(holc_grade == 'D')
+holc_la_1k_D<- holc_la_1k_D %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_la, holc_la_1k_D))))%>%
+  select(n_wells) 
+```
+
+
+
+
+Table Creation 
+
+```{r}
+
+#Wells within 1K of Buffer
+table1 <- tibble(holc_grade = c('A', 'B', 'C', 'D'), n_wells = c(434,1819,3152,3584))
+ggplot(table1) + geom_bar(aes(holc_grade, n_wells), stat = 'identity') + theme_classic()
+
+```
+
+```{r}
+#Wells within 1K of Buffer: Pre-1935
+table_Pre1935 <- tibble(holc_grade = c('A', 'B', 'C', 'D'), n_wells = c(0,42,65,62))
+ggplot(table_Pre1935) + geom_bar(aes(holc_grade, n_wells), stat = 'identity') + theme_classic()
+
+```
+
+```{r}
+#Wells within 1K of Buffer: Post-1935
+table_Post1935 <- tibble(holc_grade = c('A', 'B', 'C', 'D'), n_wells = c(222,645,856,1244))
+ggplot(table_Post1935) + geom_bar(aes(holc_grade, n_wells), stat = 'identity') + theme_classic()
+
+```
+
+

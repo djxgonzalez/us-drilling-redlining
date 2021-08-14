@@ -1,0 +1,87 @@
+---
+title: "Memo - Mapping wells and HOLC-graded neighborhoods"
+output: html_notebook
+---
+
+## Purpose
+
+The goal of this notebook is to practice importing and mapping Enverus wells and HOLC grading data. We import Enverus wells data and HOLC neighborhood grades, converts the wells data to a sf object, and then set up to map them on top of one another.
+
+Danesha, please make any edits and practice so you're confident with these functions. Your 'homework' is to make a map of wells and HOLC neighborhoods in Los Angeles. You'll need to use the `filter` , `st_as_sf`, and `ggplot` functions. Remember, with GitHub we can always go back to older versions, so you can't break anything! -DG
+
+
+```{r setup, include=FALSE}
+# first set up the environment; we need the `tidyverse` and `sf` packages
+source("../../code/0-setup/1-setup.R")
+```
+
+```{r data_input, include=FALSE}
+# since we're in a notebook in the `output/memos/` folder, we need to we use the
+# `..` to tell R to go up a level in the folders, i.e., to the root directory,
+# then we can go into the data folder
+wells <- readRDS("../../data/interim/enverus_wells_interim.rds")
+
+# this is how we input shapefiles using the sf function `st_read`, just point
+# it to the .shp file
+holc <- st_read("../../data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp")
+```
+
+```{r data_tidying, include=FALSE}
+# next we need to convert the wells from tabular to spatial data (sf object)
+wells_sf <- wells %>%
+  # R doesn't like missing long/lats, so we drop them here; we'll explore
+  # the missing data later!
+  drop_na(longitude) %>% 
+  # for practice, this fxn (function) randomly selects 100 rows; remove it before
+  # doing the LA analysis, this is just to make sure the code works
+  sample_n(100) %>%  
+  # uncomment the next line to filter to LA county!
+  #filter(county_parish == "LOS ANGELES (CA)") %>%  
+  # convert into sf object with crs NAD83
+  # uses long/lat columns to define points, crs is coordinate reference system;
+  # we can use crs_nad83 for now, which we define in the `1-setup.R` script
+  st_as_sf(coords = c("longitude", "latitude"), crs = st_crs(crs_nad83)) 
+```
+
+
+```{r echo=FALSE}
+# let's plot a map of the wells to make sure it worked! remember, this is 
+# a random group of 100 wells from the full dataset
+ggplot() +
+  geom_sf(data = wells_sf) +
+  theme_bw()  # this is just a theme I like for making maps
+```
+
+```{r echo=FALSE}
+# alright, now let's map the HOLC polygons in Los Angeles
+# first, we filter to holc dataset to Los Angeles
+holc_la <- holc %>% filter(city == "Los Angeles")
+# next we make the map and set the fill color to match the grade--check it out!
+ggplot() +
+  geom_sf(data = holc_la, aes(fill = holc_grade)) +
+  theme_bw()
+```
+
+
+```{r echo=FALSE}
+# your turn!
+# now all we need to do is layer the maps; we can stack two geom_sf() calls
+# right on top of one another, give it a try here and lmk if you have questions!
+# remember to make datasets with both `holc` and `wells` restricted to LA, you 
+# can use filter()
+
+wells_la <- wells %>% filter(county_parish == "LOS ANGELES (CA)") %>%
+  
+  st_as_sf(coords = c("longitude", "latitude"), crs = st_crs(crs_nad83))  %>%
+
+  ##This point is actually in Bay Area
+  filter (api_number != "04037999990000")
+  
+ggplot() + 
+  geom_sf(data = holc_la, aes(fill = holc_grade )) + 
+  geom_sf(data = wells_la, shape = 4, alpha = 0.2) +
+  ylim(33.7, 34.3) + xlim(-118.4, -118.2) +
+  theme_bw()
+
+```
+

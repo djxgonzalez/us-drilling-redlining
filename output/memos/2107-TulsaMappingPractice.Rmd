@@ -1,0 +1,259 @@
+---
+title: "2107-TulsaMappingPractice"
+author: "Danesha Byron"
+date: "7/14/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# first set up the environment; we need the `tidyverse` and `sf` packages
+source("../../code/0-setup/1-setup.R")
+```
+
+```{r data_input, echo = FALSE}
+# since we're in a notebook in the `output/memos/` folder, we need to we use the
+# `..` to tell R to go up a level in the folders, i.e., to the root directory,
+# then we can go into the data folder
+wells <- readRDS("../../data/interim/enverus_wells_interim.rds")
+
+# this is how we input shapefiles using the sf function `st_read`, just point
+# it to the .shp file
+holc <- st_read("../../data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp")
+```
+
+
+
+
+
+
+
+
+```{r, echo = false}
+##Testing to make sure holc_tulsa was properly filtered and graphed. 
+holc_tulsa <- holc %>% filter(state == "OK")
+
+ggplot() +
+  geom_sf(data = holc_tulsa, aes(fill = holc_grade)) +
+  scale_fill_manual(values=c("green", "blue", "yellow", "red")) + 
+  theme_bw()
+
+
+```
+
+
+
+```{r, echo=FALSE}
+#Lets see here, lets run and graph the wells_tulsa data. 
+
+wells_tulsa <- wells %>% filter(county_parish == "TULSA (OK)") %>%
+    st_as_sf(coords = c("longitude", "latitude"), crs = st_crs(crs_nad83)) 
+
+  
+  ggplot() + 
+  geom_sf(data = wells_tulsa) +
+  theme_bw()
+
+```
+
+
+
+```{r, echo=FALSE}
+
+  wells_tulsa <- wells %>% filter(county_parish == "TULSA (OK)") %>%
+    st_as_sf(coords = c("longitude", "latitude"), crs = st_crs(crs_nad83)) 
+
+  
+  ggplot() + 
+  geom_sf(data = holc_tulsa, aes(fill = holc_grade)) +
+  scale_fill_manual(values=c("green", "blue", "yellow", "red")) +
+  geom_sf(data = wells_tulsa, shape = 4, alpha = 0.2) +
+  ylim(35.9, 36.4) + xlim(-96.3, -95) +
+  theme_bw()
+
+```
+
+```{r data_input, echo = FALSE}
+
+#######I am trying to recall all of the data into this one in order to clean everything up so I can properly intersect the wells and holc data####################
+
+
+# first set up the environment; we need the `tidyverse` and `sf` packages
+source("../../code/0-setup/1-setup.R")
+
+
+# since we're in a notebook in the `output/memos/` folder, we need to we use the
+# `..` to tell R to go up a level in the folders, i.e., to the root directory,
+# then we can go into the data folder
+wells <- readRDS("../../data/interim/enverus_wells_interim.rds")
+
+# this is how we input shapefiles using the sf function `st_read`, just point
+# it to the .shp file
+holc <- st_read("../../data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp")
+
+
+wells_tulsa <- wells %>% filter(state == "OK") %>%
+    st_as_sf(coords = c("longitude", "latitude"), crs = st_crs(crs_nad83)) 
+
+holc_tulsa <- holc %>% filter(state == "OK") %>%
+  st_transform(crs_nad83)
+
+#testing dataset
+d = st_intersection(wells_tulsa, holc_tulsa)
+
+```
+
+Creates a 1K Buffer around HOLC neighborhoods
+
+```{r data_input, echo = FALSE}
+#Working to generate a 10 km buffer around HOLC neighborhoods
+
+#Buffer creates a circle around each neighborhood 10K. (From the boundary of each neighborhood)
+holc_tulsa_buff_1k <- holc_tulsa %>%
+  st_centroid() %>%
+  st_transform(crs_projected)%>% #flattens holc_la
+  st_buffer(dist = 1000)  %>% #distance is in meters
+  st_transform(crs_nad83) %>% #unflattens holc_la
+  st_union() #this unites polygons into one.
+
+total_wells_holc_instersection <- st_intersection(wells_tulsa,holc_tulsa_buff_1k)  #takes all of the wells from Tulsa County and buffered data to see how close they are. 
+ 
+#Type this into the console
+nrow(total_wells_holc_instersection) 
+#there are 558 wells that intersect with HOLC neighborhoods within 1K buffer  
+
+  
+
+
+  
+
+```
+
+Choose 1 neighborhood to test 1K buffer and centroid
+
+```{r data_input, echo = FALSE}
+neighborhood_test<- holc_tulsa %>% filter(neighborho == '8074') %>% 
+  st_centroid() %>%
+  st_transform(crs_projected)%>% #flattens holc_la
+  st_buffer(dist = 1000)  %>% #distance is in meters
+  st_transform(crs_nad83)  #unflattens holc_la
+
+  
+#this is the shapefile of the neighborhood 
+neighborhood_test_noncentroid<- holc_tulsa %>% filter(neighborho == '8074') %>% 
+  st_transform(crs_projected)%>% #flattens holc_la
+  st_transform(crs_nad83) #unflattens holc_la
+
+
+#Used to test the code
+ plot(st_geometry(neighborhood_test_noncentroid))
+ plot(st_geometry(neighborhood_test), add = TRUE)
+ plot(st_geometry(total_wells_holc_instersection), add = TRUE) 
+ #checks to see if wells are nearby neighborhood
+ 
+ 
+```
+
+
+
+Look at How many wells are within 1K of the centroid of A.B,C,D after 1935. 
+
+
+```{r data_input, echo = FALSE}
+holc_tulsa_1k<- holc_tulsa %>%
+  st_transform(crs_projected)%>% #flattens holc_la
+  st_centroid() %>%
+  st_buffer(dist = 1000)  %>% #distance is in meters
+  st_transform(crs_nad83)   #unflattens holc_la
+  
+
+#Find the wells in LA post-1935
+wells_tulsa_post1935 <- wells_tulsa %>% filter(completion_date >= as.Date("1934-12-31"))
+
+
+    
+
+#I had to try remove pipes on function to get them appear in environment 
+holc_tulsa_1k_A_post1935<- holc_tulsa_1k %>% filter(holc_grade == 'A') %>% #remove pipe, run, put pipe back run
+  mutate(n_wells = sum(lengths(st_intersects(wells_tulsa_post1935, holc_tulsa_1k_A_post1935)))) %>% 
+  select(n_wells) 
+
+holc_tulsa_1k_B_post1935<- holc_tulsa_1k %>% filter(holc_grade == 'B') %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_tulsa_post1935, holc_tulsa_1k_B_post1935)))) %>%
+  select(n_wells) 
+
+holc_tulsa_1k_C_post1935<- holc_tulsa_1k %>% filter(holc_grade == 'C') %>% 
+  mutate(n_wells = sum(lengths(st_intersects(wells_tulsa_post1935, holc_tulsa_1k_C_post1935)))) %>%
+  select(n_wells) 
+
+holc_tulsa_1k_D_post1935<- holc_tulsa_1k %>% filter(holc_grade == 'D') %>%  
+  mutate(n_wells = sum(lengths(st_intersects(wells_tulsa_post1935, holc_tulsa_1k_D_post1935)))) %>%
+  select(n_wells) 
+
+```
+
+
+
+Look at How many wells are within 1K of A,B,C,D before 1935
+
+```{r}
+holc_tulsa_1k<- holc_tulsa %>%
+  st_transform(crs_projected)%>% #flattens holc_la
+  st_buffer(dist = 1000)  %>% #distance is in meters
+  st_transform(crs_nad83)   #unflattens holc_la
+ 
+
+wells_tulsa_pre1935 <- wells_tulsa %>% filter(completion_date <= as.Date("1934-12-31"))
+
+#Type into console
+nrow(wells_tulsa_pre1935) #There are 399 wells in LA pre-1935
+
+    
+
+#I had to try remove pipes on function to get them appear in environment 
+holc_tulsa_1k_A_pre_1935<- holc_tulsa_1k %>% filter(holc_grade == 'A') %>%  #remove pipe, run, put pipe back run
+  mutate(n_wells = sum(lengths(st_intersects(wells_tulsa_pre1935, holc_tulsa_1k_A_pre_1935)))) 
+  select(n_wells) 
+holc_tulsa_1k_B_pre_1935<- holc_tulsa_1k %>% filter(holc_grade == 'B') %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_tulsa_pre1935, holc_tulsa_1k_B_pre_1935)))) %>%
+  select(n_wells) 
+holc_tulsa_1k_C_pre_1935<- holc_tulsa_1k %>% filter(holc_grade == 'C') %>% 
+  mutate(n_wells = sum(lengths(st_intersects(wells_tulsa_pre1935, holc_tulsa_1k_C_pre_1935)))) %>%
+  select(n_wells) 
+holc_tulsa_1k_D_pre_1935<- holc_tulsa_1k %>% filter(holc_grade == 'D') %>% 
+  mutate(n_wells = sum(lengths(st_intersects(wells_tulsa_pre1935, holc_tulsa_1k_D_pre_1935))))
+  select(n_wells) 
+
+```
+
+
+Look at How many wells are within 1K of A.B,C,D  
+
+```{r}
+#Creates 1K buffer around centroid of HOLC
+
+holc_tulsa_1k<- holc_tulsa %>%
+  st_transform(crs_projected)%>% #flattens holc_la
+  st_centroid() %>%
+  st_buffer(dist = 1000)  %>% #distance is in meters
+  st_transform(crs_nad83)   #unflattens holc_la
+
+holc_tulsa_1k_A<- holc_tulsa_1k %>% filter(holc_grade == 'A') 
+holc_tulsa_1k_A<- holc_tulsa_1k_A %>% #remove pike, run, put pike back run
+  mutate(n_wells = sum(lengths(st_intersects(wells_tulsa, holc_tulsa_1k_A)))) %>%
+  select(n_wells) 
+
+holc_tulsa_1k_B<- holc_tulsa_1k %>% filter(holc_grade == 'B')
+holc_tulsa_1k_B<- holc_tulsa_1k %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_tulsa, holc_tulsa_1k_B)))) %>%
+  select(n_wells) 
+
+holc_tulsa_1k_C<- holc_tulsa_1k %>% filter(holc_grade == 'C') 
+holc_tulsa_1k_C<- holc_tulsa_1k %>%  
+  mutate(n_wells = sum(lengths(st_intersects(wells_tulsa, holc_tulsa_1k_C)))) %>%
+  select(n_wells) 
+
+holc_tulsa_1k_D<- holc_tulsa_1k %>% filter(holc_grade == 'D')
+holc_tulsa_1k_D<- holc_tulsa_1k_D %>%
+  mutate(n_wells = sum(lengths(st_intersects(wells_tulsa, holc_tulsa_1k_D))))%>%
+  select(n_wells) 
+```
