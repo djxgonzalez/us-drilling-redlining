@@ -1,0 +1,9 @@
+{
+    "path" : "~/Documents/Professional/research/projects active/us redlining drilling/us-drilling-redlining/data/raw/la_county",
+    "sortOrder" : [
+        {
+            "ascending" : true,
+            "columnIndex" : 2
+        }
+    ]
+}

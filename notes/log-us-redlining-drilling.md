@@ -5,8 +5,7 @@
 ### Meta
 - **Authors:**
   - David J.X. Gonzalez
-  - Danesha Byron
-  - Wil F. Lieberman-Cribbin, wfl2112@cumc.columbia.edu
+  - [Danesha Byron?]
   - Rachel Morello-Frosch - University of California, Berkeley; rmf@berkeley.edu
   - Joan Casey, Columbia University, jac2250@cumc.columbia.edu
 - **Journals:**
@@ -15,12 +14,19 @@
   - SACNAS, October 2021 [abstract submitted 4.16.21, accepted 6._.21]
 
 ### Tasks
-- Draft an analysis plan and circulate
-- Help Danesha explore the data, answer questions (see 7.9.21)
-- Add analysis plan, documents, etc. to Box
 - Get hex codes for HOLC grades
 
 ---
+
+### 8.17.2021
+- I wrote some code last week to assess exposure and make Figures 1 and 2, but unfortunately lost it all in a GitHub mishap. I made a new repo (that I own) and am starting from scratch to rewrite the code
+- HOLC grading color hex codes:
+  - A (green)  - #8D9B5C
+  - B (blue)   - #8DA3A5
+  - C (yellow) - #D0B561
+  - D (red)    - #C0757E
+- I finished script to re-make Figure 2, which shows the exposure assessment method
+- 
 
 ### 7.9.2021 F
 - I talked with Joan C and Rachel M-F about this project; they're enthusiastic and we discussed some of the
