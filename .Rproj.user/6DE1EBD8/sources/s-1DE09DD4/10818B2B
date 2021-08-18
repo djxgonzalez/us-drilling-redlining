@@ -7,19 +7,19 @@
     "folds" : "",
     "hash" : "0",
     "id" : "10818B2B",
-    "lastKnownWriteTime" : 1629229902,
-    "last_content_update" : 1629229902619,
-    "path" : "~/Documents/Professional/research/projects active/us redlining drilling/us-drilling-redlining/code/4-communication/01-make_figure1.R",
-    "project_path" : "code/4-communication/01-make_figure1.R",
+    "lastKnownWriteTime" : 1629271641,
+    "last_content_update" : 1629271641927,
+    "path" : "~/Documents/Professional/research/projects active/us redlining drilling/us-drilling-redlining/code/3-analysis/01-cities_near_wells.R",
+    "project_path" : "code/3-analysis/01-cities_near_wells.R",
     "properties" : {
-        "cursorPosition" : "9,0",
-        "scrollLine" : "4",
+        "cursorPosition" : "37,0",
+        "scrollLine" : "18",
         "tempName" : "Untitled1"
     },
     "read_only" : false,
     "read_only_alternatives" : [
     ],
-    "relative_order" : 2,
+    "relative_order" : 3,
     "source_on_save" : false,
     "source_window" : "",
     "type" : "r_source"

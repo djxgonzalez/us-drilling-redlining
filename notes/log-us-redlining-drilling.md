@@ -26,7 +26,7 @@
   - C (yellow) - #D0B561
   - D (red)    - #C0757E
 - I finished script to re-make Figure 2, which shows the exposure assessment method
-- 
+-
 
 ### 7.9.2021 F
 - I talked with Joan C and Rachel M-F about this project; they're enthusiastic and we discussed some of the
