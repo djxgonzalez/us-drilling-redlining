@@ -6,13 +6,12 @@
 
 ##---------------------------------------------------------------------------
 ##  defines function
-
 assessExposureBufferCount <- function(data_geography, 
                                       data_wells,
                                       buffer_dist_m,
-                                      exp_variable_root) {
+                                      exp_variable) {
   
-  # generates 10 km buffer as a mask around monitor coordinates
+  # generates buffer of given distance (m) as a mask around monitor coordinates
   data_geography_buffer <- data_geography %>% 
     st_transform(crs_projected) %>%
     st_buffer(dist = buffer_dist_m) %>%
@@ -25,14 +24,14 @@ assessExposureBufferCount <- function(data_geography,
   # adds exposure variable
   if (nrow(wells_within_buffer) > 0) {
     data_geography <- data_geography %>%  
-      mutate(!!as.name(exp_variable_root) :=   
+      mutate(!!as.name(exp_variable) :=   
                sum(unlist(st_intersects(wells_within_buffer, 
                                         data_geography_buffer)))) %>%
       as_tibble() %>% 
       select(-geometry)
   } else if (nrow(wells_within_buffer) == 0) {
     data_geography <- data_geography %>% 
-      mutate(!!as.name(exp_variable_root)   := 0) %>%
+      mutate(!!as.name(exp_variable) := 0) %>%
       as_tibble() %>% 
       select(-geometry)
   }
