@@ -1,0 +1,46 @@
+---
+title: "Memo - Integrating 1940s census tracts with HOLC neighborhoods"
+output:
+   html_notebook:
+    toc: true
+    toc_float: true
+---
+
+## Purpose
+
+The goal of this notebook is to work on integrating the 1940s census tracts data with the HOLC neighborhood gradings. Nardone et al. (2020) have already found that 1940s census tracts are not available for all cities with HOLC gradings; I'll explore to what extent HOLC cities with exposure to wells have 1940s census tracts data. 
+
+
+```{r setup, include=FALSE}
+# first set up the environment; we need the `tidyverse` and `sf` packages
+source("../../code/0-setup/01-setup.R")
+```
+
+```{r data_input, include=FALSE}
+# HOLC cities near wells
+holc_cities_near_wells <-  # cities with exposure > 10 wells 
+  read_csv("../../data/interim/holc_cities_buffer_3km_wells_all.csv") %>%
+  filter(buffer_3km_wells_all_n >= 10)
+holc_cities_near_wells <-
+  st_read("../../data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp") %>%
+  st_transform(crs_projected) %>%
+  st_buffer(dist = 0) %>%  # shortcut to address issue with dataset
+  st_transform(crs_nad83) %>%
+  mutate(city_state = as.factor(paste(city, "-", state))) %>%
+  filter(city_state %in% holc_cities_near_wells$city_state) %>%
+  group_by(city_state) %>%
+  summarize() 
+
+# U.S. census tracts from 1940
+tracts_1940 <- read_csv("../../data/raw/ipums/nhgis0002_csv/nhgis0002_ds76_1940_tract.csv")
+tracts_1940_sf <- 
+  st_read("../../data/raw/ipums/nhgis0001_shapefile_tl2008_us_tract_1940/US_tract_1940_conflated.shp") %>%
+  st_transform(crs_nad83)
+```
+
+```{r data_prep, include=FALSE}
+tracts_holc_cities <- tracts_1940_sf %>% 
+  #st_intersection(tracts_1940)
+  st_intersects(holc_cities_near_wells)
+```
+

@@ -1,0 +1,13 @@
+"0","# HOLC and wells data
+holc_cities_near_wells <-  # cities with exposure > 10 wells 
+  read_csv(""../../data/interim/holc_cities_buffer_1km_wells_all.csv"") %>%
+  filter(buffer_1km_wells_all_n >= 10)
+"
+"2","
+[36m──[39m [1m[1mColumn specification[1m[22m [36m───────────────────────────────────────────────────[39m
+cols(
+  city = [31mcol_character()[39m,
+  buffer_1km_wells_all_n = [32mcol_double()[39m
+)
+
+"

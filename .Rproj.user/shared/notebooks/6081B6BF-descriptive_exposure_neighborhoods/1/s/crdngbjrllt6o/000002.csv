@@ -1,0 +1,6 @@
+"0","holc_neighborhoods_exp %>%"
+"0","  ggplot() +"
+"0","  geom_histogram(aes(buffer_1km_wells_all_n), bins = 100) +"
+"0","  labs(x = ""All wells within 1 km of neighborhood centroid (n)"","
+"0","       y = ""Count"") +"
+"0","  theme_classic()"

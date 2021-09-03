@@ -1,0 +1,479 @@
+---
+title: "Memo - Exploring pre-1935 exposure data"
+output:
+   html_notebook:
+    toc: true
+    toc_float: true
+---
+
+## Purpose
+
+The goal of this notebook is to explore initial exposure data for HOLC neighborhoods across the U.S. for wells with production dates on or before 12/31/1934 (approximately the time of HOLC grading).
+
+
+```{r setup, include=FALSE}
+# first set up the environment; we need the `tidyverse` and `sf` packages
+source("../../code/0-setup/01-setup.R")
+```
+
+```{r data_input, include=FALSE}
+# HOLC and wells data
+holc_cities <- 
+  st_read("../../data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp") %>%
+  as_tibble() %>%
+  mutate(city = ifelse(city == "Bronx" | city == "Brooklyn" | 
+                         city == "Manhattan" | city == "Staten Island" |
+                         city == "Queens", "New York City", city )) %>%
+  mutate(city = as.factor(city),
+         state = as.factor(state)) %>%
+  group_by(city, state) %>%
+  summarize()
+holc_neighborhoods <- 
+  st_read("../../data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp") %>%
+  mutate(city = as.factor(city)) %>%
+  st_transform(crs_projected) %>%
+  st_buffer(dist = 0) %>%  # shortcut to address issue with dataset
+  st_transform(crs_nad83) %>%
+  mutate(neighborhood = as.character(neighborho)) %>%
+  distinct(neighborhood, .keep_all = TRUE) %>%
+  select(-neighborho)
+wells_interim <- readRDS("../../data/interim/wells_interim.rds") %>%
+  filter(spud_date <= as.Date("1934-12-31") | 
+           completion_date <= as.Date("1934-12-31") |
+           first_prod_date <= as.Date("1934-12-31") |
+           last_prod_date  <= as.Date("1934-12-31"))
+
+# exposure data
+holc_cities_buffer_1km_wells_all <- 
+  read_csv("../../data/interim/holc_cities_buffer_1km_wells_all_pre1935.csv")
+holc_cities_buffer_3km_wells_all <- 
+  read_csv("../../data/interim/holc_cities_buffer_3km_wells_all_pre1935.csv")
+
+holc_neighborhoods_buffer_1km_wells_all <- 
+  read_csv("../../data/interim/holc_neighborhoods_buffer_1km_wells_all_pre1935.csv") %>%
+  mutate(neighborhood = as.factor(neighborhood))
+holc_neighborhoods_buffer_3km_wells_all <- 
+  read_csv("../../data/interim/holc_neighborhoods_buffer_3km_wells_all_pre1935.csv") %>%
+  mutate(neighborhood = as.factor(neighborhood))
+
+holc_neighborhoods_buffer_1km_wells_oil_gas <- 
+  read_csv("../../data/interim/holc_neighborhoods_buffer_1km_wells_oil_gas_pre1935.csv") %>%
+  mutate(neighborhood = as.factor(neighborhood))
+holc_neighborhoods_buffer_3km_wells_oil_gas <- 
+  read_csv("../../data/interim/holc_neighborhoods_buffer_3km_wells_oil_gas_pre1935.csv") %>%
+  mutate(neighborhood = as.factor(neighborhood))
+
+holc_neighborhoods_buffer_1km_wells_injection <- 
+  read_csv("../../data/interim/holc_neighborhoods_buffer_1km_wells_injection_pre1935.csv") %>%
+  mutate(neighborhood = as.factor(neighborhood))
+holc_neighborhoods_buffer_3km_wells_injection <- 
+  read_csv("../../data/interim/holc_neighborhoods_buffer_3km_wells_injection_pre1935.csv") %>%
+  mutate(neighborhood = as.factor(neighborhood))
+
+holc_neighborhoods_buffer_1km_wells_producing <- 
+  read_csv("../../data/interim/holc_neighborhoods_buffer_1km_wells_producing_pre1935.csv") %>%
+  mutate(neighborhood = as.factor(neighborhood))
+holc_neighborhoods_buffer_3km_wells_producing <- 
+  read_csv("../../data/interim/holc_neighborhoods_buffer_3km_wells_producing_pre1935.csv") %>%
+  mutate(neighborhood = as.factor(neighborhood))
+
+holc_neighborhoods_buffer_1km_wells_unknown <- 
+  read_csv("../../data/interim/holc_neighborhoods_buffer_1km_wells_unknown_pre1935.csv") %>%
+  mutate(neighborhood = as.factor(neighborhood))
+holc_neighborhoods_buffer_3km_wells_unknown <- 
+  read_csv("../../data/interim/holc_neighborhoods_buffer_3km_wells_unknown_pre1935.csv") %>%
+  mutate(neighborhood = as.factor(neighborhood))
+```
+
+```{r data_prep, include=FALSE}
+holc_neighborhoods_exp <- holc_neighborhoods %>%
+  as_tibble() %>%
+  mutate(neighhborhood = as.factor(neighborhood)) %>%
+  left_join(holc_neighborhoods_buffer_1km_wells_all, by = "neighborhood") %>%
+  mutate(buffer_1km_wells_all_n = replace_na(buffer_1km_wells_all_n, 0)) %>%
+  left_join(holc_neighborhoods_buffer_3km_wells_all, by = "neighborhood") %>%
+  mutate(buffer_3km_wells_all_n = replace_na(buffer_3km_wells_all_n, 0)) %>%
+  left_join(holc_neighborhoods_buffer_1km_wells_oil_gas, by = "neighborhood") %>%
+  mutate(buffer_1km_wells_oil_gas_n = replace_na(buffer_1km_wells_oil_gas_n, 0)) %>%
+  left_join(holc_neighborhoods_buffer_3km_wells_oil_gas, by = "neighborhood") %>%
+  mutate(buffer_3km_wells_oil_gas_n = replace_na(buffer_3km_wells_oil_gas_n, 0)) %>%
+  left_join(holc_neighborhoods_buffer_1km_wells_injection, by = "neighborhood") %>%
+  mutate(buffer_1km_wells_injection_n = replace_na(buffer_1km_wells_injection_n, 0)) %>%
+  left_join(holc_neighborhoods_buffer_3km_wells_injection, by = "neighborhood") %>%
+  mutate(buffer_3km_wells_injection_n = replace_na(buffer_3km_wells_injection_n, 0)) %>%
+  left_join(holc_neighborhoods_buffer_1km_wells_producing, by = "neighborhood") %>%
+  mutate(buffer_1km_wells_producing_n = replace_na(buffer_1km_wells_producing_n, 0)) %>%
+  left_join(holc_neighborhoods_buffer_3km_wells_producing, by = "neighborhood") %>%
+  mutate(buffer_3km_wells_producing_n = replace_na(buffer_3km_wells_producing_n, 0)) %>%
+  left_join(holc_neighborhoods_buffer_1km_wells_unknown, by = "neighborhood") %>%
+  mutate(buffer_1km_wells_unknown_n = replace_na(buffer_1km_wells_unknown_n, 0)) %>%
+  left_join(holc_neighborhoods_buffer_3km_wells_unknown, by = "neighborhood") %>%
+  mutate(buffer_3km_wells_unknown_n = replace_na(buffer_3km_wells_unknown_n, 0))
+```
+
+
+## Cities
+
+There were `r nrow(holc_cities)` cities in the HOLC dataset. Of these, `r holc_cities_buffer_1km_wells_all %>% filter(buffer_1km_wells_all_n > 0) %>% nrow()` had wells that were drilled or in operation before 1935 within 1 km a HOLC-graded neighborhood. Of these, `r holc_cities_buffer_1km_wells_all %>% filter(buffer_1km_wells_all_n >= 10) %>% nrow()` had at least 10 wells.
+
+#### Table. Number of wells within 1 km of graded neighborhoods
+
+```{r echo=FALSE}
+holc_cities_buffer_1km_wells_all %>%
+  filter(buffer_1km_wells_all_n >= 10) %>%
+  arrange(desc(buffer_1km_wells_all_n))
+```
+
+
+## Wells
+
+A total of `r nrow(wells_pre1935_sf)` wells had a spud date, completion date, and/or production start or end date before 1935. Many of the wells with production dates pre-1935 were of unknown type.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+wells_interim %>%
+  mutate(production_type = as.factor(production_type)) %>%
+  group_by(production_type) %>%
+  summarize(n = n()) %>%
+  ggplot() +
+  geom_bar(aes(reorder(production_type, n), n), stat = "identity") +
+  theme_classic() +
+  coord_flip()
+```
+
+
+## Exposure to all wells
+
+Unit of observation is the neighborhood 
+
+### All wells within 1 km of neighborhood centroid
+
+#### Plot. Histogram of n all wells within 1 km 
+
+Restricted to neighborhoods with > 0 wells. Note right skew in the data; most neighborhoods were unexposed.
+
+```{r echo=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  filter(buffer_1km_wells_all_n > 0) %>%
+  ggplot() +
+  geom_histogram(aes(buffer_1km_wells_all_n), bins = 100) +
+  labs(x = "All wells within 1 km of neighborhood centroid (n)",
+       y = "Count") +
+  theme_classic()
+```
+
+#### Plot. Histogram of n all wells within 1 km, all cities
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  mutate(holc_grade = as.factor(holc_grade)) %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  ggplot() +
+  geom_bar(aes(holc_grade, buffer_1km_wells_all_n), stat = "identity") +
+  labs(x = "HOLC grade",
+       y = "All wells within 1 km of neighborhood centroid (n)") +
+  theme_classic()
+```
+
+#### Plot. Histogram of n all wells within 1 km, by city
+
+Most pre-1935 HOLC neighborhoods with wells were in CA, OH, and OK.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  filter(buffer_1km_wells_all_n > 0) %>%
+  mutate(holc_grade = as.factor(holc_grade)) %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  ggplot() +
+  geom_bar(aes(holc_grade, buffer_1km_wells_all_n), stat = "identity") +
+  labs(x = "HOLC grade",
+       y = "All wells within 1 km of neighborhood centroid (n)") +
+  facet_wrap(. ~ city) +
+  theme_classic()
+```
+
+
+### All wells within 3 km of neighborhood centroid
+
+#### Plot. Histogram of n all wells within 3 km 
+
+Restricted to neighborhood with > 0 wells
+
+```{r echo=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  filter(buffer_3km_wells_all_n > 0) %>%
+  ggplot() +
+  geom_histogram(aes(buffer_3km_wells_all_n), bins = 100) +
+  labs(x = "All wells within 3 km of neighborhood centroid (n)",
+       y = "Count") +
+  theme_classic()
+```
+
+#### Plot. Histogram of n all wells within 3 km, all cities
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  mutate(holc_grade = as.factor(holc_grade)) %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  ggplot() +
+  geom_bar(aes(holc_grade, buffer_3km_wells_all_n), stat = "identity") +
+  labs(x = "HOLC grade",
+       y = "All wells within 3 km of neighborhood centroid (n)") +
+  theme_classic()
+```
+
+#### Plot. Histogram of n all wells within 3 km, by city
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  filter(buffer_3km_wells_all_n > 0) %>%
+  mutate(holc_grade = as.factor(holc_grade)) %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  ggplot() +
+  geom_bar(aes(holc_grade, buffer_3km_wells_all_n), stat = "identity") +
+  labs(x = "HOLC grade",
+       y = "All wells within 3 km of neighborhood centroid (n)") +
+  facet_wrap(. ~ city) +
+  theme_classic()
+```
+
+
+## Exposure to oil and gas wells
+
+Unit of observation is the neighborhood 
+
+### Oil and gas wells within 1 km of neighborhood centroid
+
+#### Plot. Histogram of n oil and gas wells within 1 km 
+
+Note: Right skew in the data; most neighborhoods were unexposed.
+
+```{r echo=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  filter(buffer_1km_wells_oil_gas_n > 0) %>%
+  ggplot() +
+  geom_histogram(aes(buffer_1km_wells_oil_gas_n), bins = 100) +
+  labs(x = "Oil and gas wells within 1 km of neighborhood centroid (n)",
+       y = "Count") +
+  theme_classic()
+```
+
+#### Plot. Histogram of n oil and gas wells within 1 km, all cities
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  mutate(holc_grade = as.factor(holc_grade)) %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  ggplot() +
+  geom_bar(aes(holc_grade, buffer_1km_wells_oil_gas_n), stat = "identity") +
+  labs(x = "HOLC grade",
+       y = "All wells within 1 km of neighborhood centroid (n)") +
+  theme_classic()
+```
+
+#### Plot. Histogram of n oil and gas wells within 1 km, by city
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  filter(buffer_1km_wells_all_n > 0) %>%
+  mutate(holc_grade = as.factor(holc_grade)) %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  ggplot() +
+  geom_bar(aes(holc_grade, buffer_1km_wells_oil_gas_n), stat = "identity") +
+  labs(x = "HOLC grade",
+       y = "All wells within 1 km of neighborhood centroid (n)") +
+  facet_wrap(. ~ city) +
+  theme_classic()
+```
+
+
+## Exposure to injection wells
+
+Only 1 neighborhood had an injection well within 1 km and 29 had at least one well within 3 km. I'll exclude injection wells for the pre-1935 analyses.
+
+
+## Exposure to producing wells 
+
+Producing wells were defined as wells with > 0 BOE of oil and/or gas production, as reported in the Enverus dataset.
+
+### Producing wells within 1 km of neighborhood centroid
+
+#### Plot. Histogram of n producing wells within 1 km 
+
+```{r echo=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  filter(buffer_1km_wells_producing_n > 0) %>%
+  ggplot() +
+  geom_histogram(aes(buffer_1km_wells_producing_n), bins = 100) +
+  labs(x = "Producing wells within 1 km of neighborhood centroid (n)",
+       y = "Count") +
+  theme_classic()
+```
+
+#### Plot. Histogram of n producing wells within 1 km, all cities
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  mutate(holc_grade = as.factor(holc_grade)) %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  ggplot() +
+  geom_bar(aes(holc_grade, buffer_1km_wells_producing_n), stat = "identity") +
+  labs(x = "HOLC grade",
+       y = "Producing wells within 1 km of neighborhood centroid (n)") +
+  theme_classic()
+```
+
+#### Plot. Histogram of n producing wells within 1 km, by city
+
+Note: All data for California come from Los Angeles, I think that will make an interesting case study!
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  filter(buffer_1km_wells_producing_n > 0) %>%
+  mutate(holc_grade = as.factor(holc_grade)) %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  ggplot() +
+  geom_bar(aes(holc_grade, buffer_1km_wells_producing_n), stat = "identity") +
+  labs(x = "HOLC grade",
+       y = "Producing wells within 1 km of neighborhood centroid (n)") +
+  facet_wrap(. ~ city) +
+  theme_classic()
+```
+
+
+### Producing wells within 3 km of neighborhood centroid
+
+#### Plot. Histogram of n producing wells within 3 km 
+
+```{r echo=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  filter(buffer_3km_wells_producing_n > 0) %>%
+  ggplot() +
+  geom_histogram(aes(buffer_3km_wells_producing_n), bins = 100) +
+  labs(x = "Producing wells within 3 km of neighborhood centroid (n)",
+       y = "Count") +
+  theme_classic()
+```
+
+#### Plot. Histogram of n producing wells within 3 km, all cities
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  mutate(holc_grade = as.factor(holc_grade)) %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  ggplot() +
+  geom_bar(aes(holc_grade, buffer_3km_wells_producing_n), stat = "identity") +
+  labs(x = "HOLC grade",
+       y = "Producing wells within 3 km of neighborhood centroid (n)") +
+  theme_classic()
+```
+
+#### Plot. Histogram of n producing wells within 3 km, by city
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  filter(buffer_3km_wells_producing_n > 0) %>%
+  mutate(holc_grade = as.factor(holc_grade)) %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  ggplot() +
+  geom_bar(aes(holc_grade, buffer_3km_wells_producing_n), stat = "identity") +
+  labs(x = "HOLC grade",
+       y = "Producing wells within 3 km of neighborhood centroid (n)") +
+  facet_wrap(. ~ city) +
+  theme_classic()
+```
+
+
+## Exposure to 'unknown' wells
+
+Some `r wells_pre1935_sf %>% filter(production_type == "UNKNOWN") %>% nrow()` of the pre-1935 wells were labeled as unknown type. Given the age of these records, I'm not too surprised to see this.
+
+### Unknown wells within 1 km of neighborhood centroid
+
+#### Plot. Histogram of n unknown wells within 1 km 
+
+Note: Right skew in the data; most neighborhoods were unexposed.
+
+```{r echo=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  filter(buffer_1km_wells_unknown_n > 0) %>%
+  ggplot() +
+  geom_histogram(aes(buffer_1km_wells_unknown_n), bins = 100) +
+  labs(x = "Unknown wells within 1 km of neighborhood centroid (n)",
+       y = "Count") +
+  theme_classic()
+```
+
+#### Plot. Histogram of n unknown wells within 1 km, all cities
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  mutate(holc_grade = as.factor(holc_grade)) %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  ggplot() +
+  geom_bar(aes(holc_grade, buffer_1km_wells_unknown_n), stat = "identity") +
+  labs(x = "HOLC grade",
+       y = "Unknown wells within 1 km of neighborhood centroid (n)") +
+  theme_classic()
+```
+
+#### Plot. Histogram of n oil and gas wells within 1 km, by city
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  filter(buffer_1km_wells_all_n > 0) %>%
+  mutate(holc_grade = as.factor(holc_grade)) %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  ggplot() +
+  geom_bar(aes(holc_grade, buffer_1km_wells_unknown_n), stat = "identity") +
+  labs(x = "HOLC grade",
+       y = "Unknown wells within 1 km of neighborhood centroid (n)") +
+  facet_wrap(. ~ city) +
+  theme_classic()
+```
+
+
+### Unknown wells within 3 km of neighborhood centroid
+
+#### Plot. Histogram of n unknown wells within 3 km 
+
+Note: Right skew in the data; most neighborhoods were unexposed.
+
+```{r echo=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  filter(buffer_3km_wells_unknown_n > 0) %>%
+  ggplot() +
+  geom_histogram(aes(buffer_3km_wells_unknown_n), bins = 100) +
+  labs(x = "Unknown wells within 3 km of neighborhood centroid (n)",
+       y = "Count") +
+  theme_classic()
+```
+
+#### Plot. Histogram of n unknown wells within 3 km, all cities
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  mutate(holc_grade = as.factor(holc_grade)) %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  ggplot() +
+  geom_bar(aes(holc_grade, buffer_3km_wells_unknown_n), stat = "identity") +
+  labs(x = "HOLC grade",
+       y = "Unknown wells within 3 km of neighborhood centroid (n)") +
+  theme_classic()
+```
+
+#### Plot. Histogram of n oil and gas wells within 3 km, by city
+
+Most of these wells seem to be in Oklahoma City and Tulsa, where we see a disparity in exposure.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+holc_neighborhoods_exp %>%
+  filter(buffer_3km_wells_all_n > 0) %>%
+  mutate(holc_grade = as.factor(holc_grade)) %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  ggplot() +
+  geom_bar(aes(holc_grade, buffer_3km_wells_unknown_n), stat = "identity") +
+  labs(x = "HOLC grade",
+       y = "Unknown wells within 3 km of neighborhood centroid (n)") +
+  facet_wrap(. ~ city) +
+  theme_classic()
+```

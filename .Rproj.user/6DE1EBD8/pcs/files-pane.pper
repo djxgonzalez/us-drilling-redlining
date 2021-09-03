@@ -1,9 +1,17 @@
 {
-    "path" : "~/Documents/Professional/research/projects active/us redlining drilling/us-drilling-redlining/data/raw/la_county",
+    "path" : "~/Documents/Professional/research/projects active/cal drilling air quality/cal-drilling-air-quality/code/1-data_tidying",
     "sortOrder" : [
         {
             "ascending" : true,
             "columnIndex" : 2
+        },
+        {
+            "ascending" : false,
+            "columnIndex" : 4
+        },
+        {
+            "ascending" : false,
+            "columnIndex" : 3
         }
     ]
 }

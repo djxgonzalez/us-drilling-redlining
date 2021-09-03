@@ -1,0 +1,7 @@
+"0","holc_neighborhoods_exp %>%"
+"0","  filter(buffer_3km_production_boe > 0) %>%"
+"0","  ggplot() +"
+"0","  geom_histogram(aes(buffer_3km_production_boe), bins = 100) +"
+"0","  labs(x = ""Production volume within 3 km of neighborhood centroid (n)"","
+"0","       y = ""Count"") +"
+"0","  theme_classic()"

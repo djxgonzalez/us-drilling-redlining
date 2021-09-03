@@ -1,0 +1,12 @@
+"0","holc_neighborhoods_buffer_3km_wells_unknown <- 
+  read_csv(""../../data/interim/holc_neighborhoods_buffer_3km_wells_unknown_pre1935.csv"") %>%
+  mutate(neighborhood = as.factor(neighborhood))
+"
+"2","
+[36m──[39m [1m[1mColumn specification[1m[22m [36m───────────────────────────────────────────────────────────────────[39m
+cols(
+  neighborhood = [32mcol_double()[39m,
+  buffer_3km_wells_unknown_n = [32mcol_double()[39m
+)
+
+"

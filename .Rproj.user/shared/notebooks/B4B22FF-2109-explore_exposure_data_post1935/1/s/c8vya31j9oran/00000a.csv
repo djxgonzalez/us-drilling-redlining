@@ -1,0 +1,192 @@
+"0","# HOLC and wells data"
+"0","holc_cities <- "
+"0","  st_read(""../../data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp"") %>%"
+"0","  as_tibble() %>%"
+"0","  mutate(city = ifelse(city == ""Bronx"" | city == ""Brooklyn"" | "
+"0","                         city == ""Manhattan"" | city == ""Staten Island"" |"
+"0","                         city == ""Queens"", ""New York City"", city )) %>%"
+"0","  mutate(city = as.factor(city),"
+"0","         state = as.factor(state)) %>%"
+"0","  group_by(city, state) %>%"
+"0","  summarize()"
+"1","Reading layer `"
+"1","holc_ad_data"
+"1","' from data source `"
+"1","/Users/davidgonzalez/Documents/Professional/research/projects active/us redlining drilling/us-drilling-redlining/data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp"
+"1","' using driver `"
+"1","ESRI Shapefile"
+"1","'"
+"1","
+"
+"1","Simple feature collection with 8878 features and 7 fields"
+"1"," (with 3 geometries empty)"
+"1","
+"
+"1","geometry type:  MULTIPOLYGON
+"
+"1","dimension:      XY
+"
+"1","bbox:           "
+"1","xmin: -122.7675 ymin: 25.70537 xmax: -70.9492 ymax: 47.72251"
+"1","
+"
+"1","CRS:            4326
+"
+"2","`summarise()` regrouping output by 'city' (override with `.groups` argument)
+"
+"0","holc_neighborhoods <- "
+"0","  st_read(""../../data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp"") %>%"
+"0","  mutate(city = as.factor(city)) %>%"
+"0","  st_transform(crs_projected) %>%"
+"0","  st_buffer(dist = 0) %>%  # shortcut to address issue with dataset"
+"0","  st_transform(crs_nad83) %>%"
+"0","  mutate(neighborhood = as.character(neighborho)) %>%"
+"0","  distinct(neighborhood, .keep_all = TRUE) %>%"
+"0","  select(-neighborho)"
+"1","Reading layer `"
+"1","holc_ad_data"
+"1","' from data source `"
+"1","/Users/davidgonzalez/Documents/Professional/research/projects active/us redlining drilling/us-drilling-redlining/data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp"
+"1","' using driver `"
+"1","ESRI Shapefile"
+"1","'"
+"1","
+"
+"1","Simple feature collection with 8878 features and 7 fields"
+"1"," (with 3 geometries empty)"
+"1","
+"
+"1","geometry type:  MULTIPOLYGON
+"
+"1","dimension:      XY
+"
+"1","bbox:           "
+"1","xmin: -122.7675 ymin: 25.70537 xmax: -70.9492 ymax: 47.72251"
+"1","
+"
+"1","CRS:            4326
+"
+"0","# makes dataset of post-1935 wells, excluded wells with any pre-1935 activity"
+"0","wells_pre1935 <- readRDS(""../../data/interim/wells_interim.rds"") %>%"
+"0","  drop_na(""longitude"") %>%"
+"0","  filter(spud_date <= as.Date(""1934-12-31"") | "
+"0","           completion_date <= as.Date(""1934-12-31"") |"
+"0","           first_prod_date <= as.Date(""1934-12-31"") |"
+"0","           last_prod_date  <= as.Date(""1934-12-31""))"
+"0","wells_interim <- readRDS(""../../data/interim/wells_interim.rds"") %>%"
+"0","  drop_na(""longitude"") %>%"
+"0","  filter(spud_date >= as.Date(""1935-01-01"") | "
+"0","           completion_date >= as.Date(""1935-01-01"") |"
+"0","           first_prod_date >= as.Date(""1935-01-01"") |"
+"0","           last_prod_date  >= as.Date(""1935-01-01"")) %>%"
+"0","  filter(api_number %!in% wells_pre1935$api_number)"
+"0",""
+"0","# exposure data"
+"0","holc_cities_buffer_1km_wells_all <- "
+"0","  read_csv(""../../data/interim/holc_cities_buffer_1km_wells_all_post1935.csv"")"
+"2","
+[36m──[39m [1m[1mColumn specification[1m[22m [36m─────────────────────────────────────────────────────────────────[39m
+cols(
+  city_state = [31mcol_character()[39m,
+  buffer_1km_wells_all_n = [32mcol_double()[39m
+)
+
+"
+"0","holc_cities_buffer_3km_wells_all <- "
+"0","  read_csv(""../../data/interim/holc_cities_buffer_3km_wells_all_post1935.csv"")"
+"2","
+[36m──[39m [1m[1mColumn specification[1m[22m [36m─────────────────────────────────────────────────────────────────[39m
+cols(
+  city_state = [31mcol_character()[39m,
+  buffer_3km_wells_all_n = [32mcol_double()[39m
+)
+
+"
+"0","holc_neighborhoods_buffer_1km_wells_all <- "
+"0","  read_csv(""../../data/interim/holc_neighborhoods_buffer_1km_wells_all_post1935.csv"") %>%"
+"0","  mutate(neighborhood = as.factor(neighborhood))"
+"2","
+[36m──[39m [1m[1mColumn specification[1m[22m [36m─────────────────────────────────────────────────────────────────[39m
+cols(
+  neighborhood = [32mcol_double()[39m,
+  buffer_1km_wells_all_n = [32mcol_double()[39m
+)
+
+"
+"0","holc_neighborhoods_buffer_3km_wells_all <- "
+"0","  read_csv(""../../data/interim/holc_neighborhoods_buffer_3km_wells_all_post1935.csv"") %>%"
+"0","  mutate(neighborhood = as.factor(neighborhood))"
+"2","
+[36m──[39m [1m[1mColumn specification[1m[22m [36m─────────────────────────────────────────────────────────────────[39m
+cols(
+  neighborhood = [32mcol_double()[39m,
+  buffer_3km_wells_all_n = [32mcol_double()[39m
+)
+
+"
+"0","holc_neighborhoods_buffer_1km_wells_oil_gas <- "
+"0","  read_csv(""../../data/interim/holc_neighborhoods_buffer_1km_wells_oil_gas_post1935.csv"") %>%"
+"0","  mutate(neighborhood = as.factor(neighborhood))"
+"2","
+[36m──[39m [1m[1mColumn specification[1m[22m [36m─────────────────────────────────────────────────────────────────[39m
+cols(
+  neighborhood = [32mcol_double()[39m,
+  buffer_1km_wells_oil_gas_n = [32mcol_double()[39m
+)
+
+"
+"0","holc_neighborhoods_buffer_3km_wells_oil_gas <- "
+"0","  read_csv(""../../data/interim/holc_neighborhoods_buffer_3km_wells_oil_gas_post1935.csv"") %>%"
+"0","  mutate(neighborhood = as.factor(neighborhood))"
+"2","
+[36m──[39m [1m[1mColumn specification[1m[22m [36m─────────────────────────────────────────────────────────────────[39m
+cols(
+  neighborhood = [32mcol_double()[39m,
+  buffer_3km_wells_oil_gas_n = [32mcol_double()[39m
+)
+
+"
+"0","holc_neighborhoods_buffer_1km_wells_injection <- "
+"0","  read_csv(""../../data/interim/holc_neighborhoods_buffer_1km_wells_injection_post1935.csv"") %>%"
+"0","  mutate(neighborhood = as.factor(neighborhood))"
+"2","
+[36m──[39m [1m[1mColumn specification[1m[22m [36m─────────────────────────────────────────────────────────────────[39m
+cols(
+  neighborhood = [32mcol_double()[39m,
+  buffer_1km_wells_injection_n = [32mcol_double()[39m
+)
+
+"
+"0","holc_neighborhoods_buffer_3km_wells_injection <- "
+"0","  read_csv(""../../data/interim/holc_neighborhoods_buffer_3km_wells_injection_post1935.csv"") %>%"
+"0","  mutate(neighborhood = as.factor(neighborhood))"
+"2","
+[36m──[39m [1m[1mColumn specification[1m[22m [36m─────────────────────────────────────────────────────────────────[39m
+cols(
+  neighborhood = [32mcol_double()[39m,
+  buffer_3km_wells_injection_n = [32mcol_double()[39m
+)
+
+"
+"0","holc_neighborhoods_buffer_1km_wells_producing <- "
+"0","  read_csv(""../../data/interim/holc_neighborhoods_buffer_1km_wells_producing_post1935.csv"") %>%"
+"0","  mutate(neighborhood = as.factor(neighborhood))"
+"2","
+[36m──[39m [1m[1mColumn specification[1m[22m [36m─────────────────────────────────────────────────────────────────[39m
+cols(
+  neighborhood = [32mcol_double()[39m,
+  buffer_1km_wells_producing_n = [32mcol_double()[39m
+)
+
+"
+"0","holc_neighborhoods_buffer_3km_wells_producing <- "
+"0","  read_csv(""../../data/interim/holc_neighborhoods_buffer_3km_wells_producing_post1935.csv"") %>%"
+"0","  mutate(neighborhood = as.factor(neighborhood))"
+"2","
+[36m──[39m [1m[1mColumn specification[1m[22m [36m─────────────────────────────────────────────────────────────────[39m
+cols(
+  neighborhood = [32mcol_double()[39m,
+  buffer_3km_wells_producing_n = [32mcol_double()[39m
+)
+
+"

@@ -1,0 +1,6 @@
+"0","tracts_holc_cities <- tracts_1940 %>% 
+  #st_intersection(tracts_1940)
+  st_intersects(holc_cities_near_wells)
+"
+"2","although coordinates are longitude/latitude, st_intersects assumes that they are planar
+"

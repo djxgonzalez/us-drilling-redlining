@@ -1,0 +1,63 @@
+"0","calgem_production_monthly1819 <- tibble()"
+"0","# loops through 2018-2019 and tidies the CalGEM production data"
+"0","for (year in c(2018:2019)) {"
+"0","  calgem_production_monthly1819 <-"
+"0","    bind_rows(calgem_production_monthly1819,"
+"0","              tidyProductionData1819("
+"0","                paste(""../../data/raw/cal_gem/calgem_production_monthly_"","
+"0","                      as.character(year),"
+"0","                      "".csv"", "
+"0","                      sep = """")"
+"0","              )"
+"0","    )"
+"0","}"
+"2","
+[36m──[39m [1m[1mColumn specification[1m[22m [36m────────────────────────────────────────────────────[39m
+cols(
+  ReportType = [31mcol_character()[39m,
+  APINumber = [31mcol_character()[39m,
+  FieldCode = [31mcol_character()[39m,
+  AreaCode = [31mcol_character()[39m,
+  PoolCode = [31mcol_character()[39m,
+  WellTypeCode = [31mcol_character()[39m,
+  ProductionReportDate = [34mcol_datetime(format = """")[39m,
+  ProductionStatus = [31mcol_character()[39m,
+  CasingPressure = [32mcol_double()[39m,
+  TubingPressure = [32mcol_double()[39m,
+  BTUofGasProduced = [32mcol_double()[39m,
+  MethodOfOperation = [32mcol_double()[39m,
+  APIGravityofOil = [32mcol_double()[39m,
+  WaterDisposition = [32mcol_double()[39m,
+  OilorCondensateProduced = [32mcol_double()[39m,
+  DaysProducing = [32mcol_double()[39m,
+  GasProduced = [32mcol_double()[39m,
+  WaterProduced = [32mcol_double()[39m,
+  ReportedOrEstimated = [31mcol_character()[39m
+)
+
+"
+"2","
+[36m──[39m [1m[1mColumn specification[1m[22m [36m────────────────────────────────────────────────────[39m
+cols(
+  ReportType = [31mcol_character()[39m,
+  APINumber = [31mcol_character()[39m,
+  FieldCode = [31mcol_character()[39m,
+  AreaCode = [31mcol_character()[39m,
+  PoolCode = [31mcol_character()[39m,
+  WellTypeCode = [31mcol_character()[39m,
+  ProductionReportDate = [34mcol_datetime(format = """")[39m,
+  ProductionStatus = [31mcol_character()[39m,
+  CasingPressure = [32mcol_double()[39m,
+  TubingPressure = [32mcol_double()[39m,
+  BTUofGasProduced = [32mcol_double()[39m,
+  MethodOfOperation = [32mcol_double()[39m,
+  APIGravityofOil = [32mcol_double()[39m,
+  WaterDisposition = [32mcol_double()[39m,
+  OilorCondensateProduced = [32mcol_double()[39m,
+  DaysProducing = [32mcol_double()[39m,
+  GasProduced = [32mcol_double()[39m,
+  WaterProduced = [32mcol_double()[39m,
+  ReportedOrEstimated = [31mcol_character()[39m
+)
+
+"

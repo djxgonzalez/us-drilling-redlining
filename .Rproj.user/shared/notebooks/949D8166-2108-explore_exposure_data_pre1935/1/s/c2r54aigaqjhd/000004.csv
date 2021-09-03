@@ -1,0 +1,8 @@
+"0","wells_interim %>%"
+"0","  mutate(production_type = as.factor(production_type)) %>%"
+"0","  group_by(production_type) %>%"
+"0","  summarize(n = n()) %>%"
+"0","  ggplot() +"
+"0","  geom_bar(aes(reorder(production_type, n), n), stat = ""identity"") +"
+"0","  theme_classic() +"
+"0","  coord_flip()"

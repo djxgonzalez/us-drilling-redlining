@@ -1,0 +1,12 @@
+"0","wells_interim %>%
+  mutate(production_type = as.factor(production_type)) %>%
+  group_by(production_type) %>%
+  summarize(n = n())  %>%
+  arrange(desc(n))  %>%
+  ggplot() +
+  geom_bar(aes(production_type, n), stat = ""identity"") +
+  theme_classic() +
+  coord_flip()
+"
+"2","`summarise()` ungrouping output (override with `.groups` argument)
+"

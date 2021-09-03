@@ -1,0 +1,20 @@
+"0","# U.S. census tracts from 1940
+tracts_1940 <- read_csv(""../../data/raw/ipums/nhgis0002_csv/nhgis0002_ds76_1940_tract.csv"")
+"
+"2","
+[36m──[39m [1m[1mColumn specification[1m[22m [36m───────────────────────────────────────────────────────────────────[39m
+cols(
+  .default = col_double(),
+  GISJOIN = [31mcol_character()[39m,
+  STATE = [31mcol_character()[39m,
+  STATEA = [31mcol_character()[39m,
+  COUNTY = [31mcol_character()[39m,
+  COUNTYA = [31mcol_character()[39m,
+  PRETRACTA = [31mcol_character()[39m,
+  TRACTA = [31mcol_character()[39m,
+  POSTTRCTA = [31mcol_character()[39m,
+  AREANAME = [31mcol_character()[39m
+)
+[36mℹ[39m Use [38;5;251m[48;5;235m[38;5;251m[48;5;235m`spec()`[48;5;235m[38;5;251m[49m[39m for the full column specifications.
+
+"

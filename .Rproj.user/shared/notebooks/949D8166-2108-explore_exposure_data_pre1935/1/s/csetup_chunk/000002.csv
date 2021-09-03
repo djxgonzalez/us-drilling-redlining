@@ -1,0 +1,5 @@
+"0","# first set up the environment; we need the `tidyverse` and `sf` packages"
+"2","There were 16 warnings (use warnings() to see them)"
+"2","
+"
+"0","source(""../../code/0-setup/01-setup.R"")"

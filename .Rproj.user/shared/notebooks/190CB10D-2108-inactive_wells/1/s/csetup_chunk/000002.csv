@@ -1,0 +1,15 @@
+"0","library(""lubridate"")"
+"2","
+Attaching package: ‘lubridate’
+
+"
+"2","The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+"
+"2","There were 25 warnings (use warnings() to see them)"
+"2","
+"
+"0","source(""../../code/0-setup/01-setup.R"")"
+"0","source(""../../code/1-data_tidying/02-tidy_calgem_production_data.R"")"

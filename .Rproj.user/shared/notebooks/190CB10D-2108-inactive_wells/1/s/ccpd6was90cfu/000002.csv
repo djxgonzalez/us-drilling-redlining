@@ -1,0 +1,55 @@
+"0","wells_interim    <- readRDS(""../../data/interim/wells_interim.rds"")"
+"0","calgem_prod_2018 <- "
+"0","  read_csv(""../../data/raw/cal_gem/calgem_production_monthly_2018.csv"")"
+"2","
+[36m──[39m [1m[1mColumn specification[1m[22m [36m────────────────────────────────────────────────────────────────────────[39m
+cols(
+  ReportType = [31mcol_character()[39m,
+  APINumber = [31mcol_character()[39m,
+  FieldCode = [31mcol_character()[39m,
+  AreaCode = [31mcol_character()[39m,
+  PoolCode = [31mcol_character()[39m,
+  WellTypeCode = [31mcol_character()[39m,
+  ProductionReportDate = [34mcol_datetime(format = """")[39m,
+  ProductionStatus = [31mcol_character()[39m,
+  CasingPressure = [32mcol_double()[39m,
+  TubingPressure = [32mcol_double()[39m,
+  BTUofGasProduced = [32mcol_double()[39m,
+  MethodOfOperation = [32mcol_double()[39m,
+  APIGravityofOil = [32mcol_double()[39m,
+  WaterDisposition = [32mcol_double()[39m,
+  OilorCondensateProduced = [32mcol_double()[39m,
+  DaysProducing = [32mcol_double()[39m,
+  GasProduced = [32mcol_double()[39m,
+  WaterProduced = [32mcol_double()[39m,
+  ReportedOrEstimated = [31mcol_character()[39m
+)
+
+"
+"0","calgem_prod_2019 <- "
+"0","  read_csv(""../../data/raw/cal_gem/calgem_production_monthly_2019.csv"") "
+"2","
+[36m──[39m [1m[1mColumn specification[1m[22m [36m──────────────────────────────────────────────────────────────────────────────────[39m
+cols(
+  ReportType = [31mcol_character()[39m,
+  APINumber = [31mcol_character()[39m,
+  FieldCode = [31mcol_character()[39m,
+  AreaCode = [31mcol_character()[39m,
+  PoolCode = [31mcol_character()[39m,
+  WellTypeCode = [31mcol_character()[39m,
+  ProductionReportDate = [34mcol_datetime(format = """")[39m,
+  ProductionStatus = [31mcol_character()[39m,
+  CasingPressure = [32mcol_double()[39m,
+  TubingPressure = [32mcol_double()[39m,
+  BTUofGasProduced = [32mcol_double()[39m,
+  MethodOfOperation = [32mcol_double()[39m,
+  APIGravityofOil = [32mcol_double()[39m,
+  WaterDisposition = [32mcol_double()[39m,
+  OilorCondensateProduced = [32mcol_double()[39m,
+  DaysProducing = [32mcol_double()[39m,
+  GasProduced = [32mcol_double()[39m,
+  WaterProduced = [32mcol_double()[39m,
+  ReportedOrEstimated = [31mcol_character()[39m
+)
+
+"

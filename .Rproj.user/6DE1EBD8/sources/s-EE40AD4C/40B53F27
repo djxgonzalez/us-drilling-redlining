@@ -1,0 +1,28 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1630619590329.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "40B53F27",
+    "lastKnownWriteTime" : 1630622799,
+    "last_content_update" : 1630622799353,
+    "path" : "~/Documents/Professional/research/projects active/us redlining drilling/us-drilling-redlining/output/memos/2108-census_tracts_holc_neighborhoods.Rmd",
+    "project_path" : "output/memos/2108-census_tracts_holc_neighborhoods.Rmd",
+    "properties" : {
+        "chunk_output_type" : "inline",
+        "cursorPosition" : "34,11",
+        "last_setup_crc32" : "EE40AD4C11f8e2c3",
+        "scrollLine" : "17",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

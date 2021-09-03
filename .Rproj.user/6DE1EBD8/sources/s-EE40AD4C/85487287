@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1630633861641.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "85487287",
+    "lastKnownWriteTime" : 1630633753,
+    "last_content_update" : 1630633753,
+    "path" : "~/Documents/Professional/research/projects active/us redlining drilling/us-drilling-redlining/code/1-data_tidying/03-tidy_ipums_data.R",
+    "project_path" : "code/1-data_tidying/03-tidy_ipums_data.R",
+    "properties" : {
+        "cursorPosition" : "22,37",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

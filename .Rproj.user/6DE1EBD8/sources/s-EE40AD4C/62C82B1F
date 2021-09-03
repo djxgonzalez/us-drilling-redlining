@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1630619350961.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "62C82B1F",
+    "lastKnownWriteTime" : 1630627791,
+    "last_content_update" : 1630627791052,
+    "path" : "~/Documents/Professional/research/projects active/us redlining drilling/us-drilling-redlining/code/4-communication/01-make_figure1.R",
+    "project_path" : "code/4-communication/01-make_figure1.R",
+    "properties" : {
+        "cursorPosition" : "9,0",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

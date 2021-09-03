@@ -1,0 +1,6 @@
+"0","calgem_no_production <- calgem_production_monthly1819 %>%"
+"0","  filter(total_oil_gas_produced == 0) %>%"
+"0","  distinct(api_number)"
+"0",""
+"0","wells_postprod <- wells_interim %>% "
+"0","  filter(api_number %in% calgem_no_production$api_number)"
