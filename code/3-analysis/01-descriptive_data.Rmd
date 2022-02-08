@@ -1,0 +1,1311 @@
+---
+title: "Analyses - Descriptive"
+output:
+  html_document:
+    theme: flatly
+    highlight: haddock 
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+    keep_md: true
+    number_sections: true
+---
+
+```{r include=FALSE, setup}
+source("../0-setup/01-setup.R")
+```
+
+```{r include=FALSE, data_input}
+holc_neighborhoods_exp <- 
+  readRDS("../../data/processed/holc_neighborhoods_exp.rds")
+wells_interim <- readRDS("../../data/interim/wells_interim.rds")
+
+# holc cities buffers
+# holc_buffer_0m <- 
+#   st_read("../../data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp") %>%
+#   st_transform(crs_projected) %>%
+#   st_buffer(dist = 0) %>%  # shortcut to address issue with dataset
+#   st_transform(crs_nad83) %>%
+#   st_union()
+# holc_buffer_100m <- 
+#   st_read("../../data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp") %>%
+#   st_transform(crs_projected) %>%
+#   st_buffer(dist = 100) %>%  # shortcut to address issue with dataset
+#   st_transform(crs_nad83) %>%
+#   st_union()
+# holc_buffer_1000m <- 
+#   st_read("../../data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp") %>%
+#   st_transform(crs_projected) %>%
+#   st_buffer(dist = 1000) %>%  # shortcut to address issue with dataset
+#   st_transform(crs_nad83) %>%
+#   st_union()
+
+# wells - all, pre-1935, and post-1935
+# wells_sf <- readRDS("../../data/interim/wells_interim.rds") %>%
+#   drop_na("longitude") %>%
+#   st_as_sf(coords = c("longitude", "latitude"), crs = crs_nad83)
+```
+
+```{r include=FALSE, data_prep}
+holc_exp <- holc_neighborhoods_exp %>%
+  filter(city_wells_100m_all >= 10)
+holc_census <- holc_exp %>%
+  drop_na(pop40_w) %>%
+  filter(pop40_w > 0)
+```
+
+```{r include=FALSE, data_prep_wells}
+# wells within buffers - 0 m, 100 m, and 1000m
+# wells_all_1000m <- wells_sf %>% 
+#   filter(production_type %in% c("GAS", "OIL", "OIL & GAS", "UNKNOWN", 
+#                                 "INJECTION")) %>%
+#   st_intersection(holc_buffer_1000m)
+#saveRDS(wells_all_1000m, "../../data/interim/wells_all_1000m.rds")
+wells_all_1000m <- readRDS("../../data/interim/wells_all_1000m.rds")
+# wells_all_100m <- wells_all_1000m %>%   # do this successively for efficiency
+#   filter(production_type %in% c("GAS", "OIL", "OIL & GAS", "UNKNOWN", 
+#                                 "INJECTION")) %>%
+#   st_intersection(holc_buffer_100m)
+#saveRDS(wells_all_100m, "../../data/interim/wells_all_100m.rds")
+wells_all_100m <- readRDS("../../data/interim/wells_all_100m.rds")
+# wells_all_0m <- wells_all_100m %>% 
+#   st_intersection(holc_buffer_0m) %>%
+#   filter(production_type %in% c("GAS", "OIL", "OIL & GAS", "UNKNOWN", 
+#                                 "INJECTION"))
+# saveRDS(wells_all_0m, "../../data/interim/wells_all_0m.rds")
+wells_all_0m <- readRDS("../../data/interim/wells_all_0m.rds")
+
+# pre-HOLC appraisal wells
+wells_pre1935_0m <- wells_all_0m %>%
+  filter(spud_date <= as.Date("1934-12-31") | 
+           completion_date <= as.Date("1934-12-31") |
+           first_prod_date <= as.Date("1934-12-31") |
+           last_prod_date  <= as.Date("1934-12-31"))
+wells_pre1935_100m <- wells_all_100m %>%
+  filter(spud_date <= as.Date("1934-12-31") | 
+           completion_date <= as.Date("1934-12-31") |
+           first_prod_date <= as.Date("1934-12-31") |
+           last_prod_date  <= as.Date("1934-12-31"))
+wells_pre1935_1000m <- wells_all_1000m %>%
+  filter(spud_date <= as.Date("1934-12-31") | 
+           completion_date <= as.Date("1934-12-31") |
+           first_prod_date <= as.Date("1934-12-31") |
+           last_prod_date  <= as.Date("1934-12-31"))
+
+# post-HOLC appraisal wells
+wells_post1935_0m <- wells_all_0m %>%
+  filter(spud_date >= as.Date("1935-01-01") | 
+           completion_date >= as.Date("1935-01-01") |
+           first_prod_date >= as.Date("1935-01-01") |
+           last_prod_date  >= as.Date("1935-01-01"))
+wells_post1935_100m <- wells_all_100m %>%
+  filter(spud_date >= as.Date("1935-01-01") | 
+           completion_date >= as.Date("1935-01-01") |
+           first_prod_date >= as.Date("1935-01-01") |
+           last_prod_date  >= as.Date("1935-01-01"))
+wells_post1935_1000m <- wells_all_1000m %>%
+  filter(spud_date >= as.Date("1935-01-01") | 
+           completion_date >= as.Date("1935-01-01") |
+           first_prod_date >= as.Date("1935-01-01") |
+           last_prod_date  >= as.Date("1935-01-01"))
+```
+
+
+# Cities
+
+### Table. Cities with ≥ 10 wells w/in 100 m
+
+- 33 cities from 13 states with ≥ 10 well within 100 m of HOLC-graded neighborhoods
+- 13 additional cities with wells within 3 km
+
+```{r}
+holc_exp %>%
+  filter(city_wells_100m_all >= 10) %>%
+  as_tibble() %>%
+  distinct(city_state, city_wells_0km_all, city_wells_100m_all, 
+           city_wells_1km_all) %>%
+  arrange(desc(city_wells_100m_all))
+```
+
+## Census data
+
+### Table. Cities with ≥ 10 wells w/in 100 m AND census tracts data
+
+- 15 cities with ≥ 10 wells within 1 km of HOLC-graded neighborhoods *and* census tracts data
+- 5 additional cities with ≥ 10 wells within 3 km
+
+```{r echo=FALSE}
+holc_exp %>%
+  filter(city_wells_100m_all >= 10) %>%
+  as_tibble() %>%
+  drop_na(pop40_w) %>%
+  as_tibble() %>%
+  distinct(city_state, city_wells_1km_all) %>%
+  arrange(desc(city_wells_1km_all))
+```
+
+### Table. Cities with ≥ 10 wells w/in 100 m AND census tracts data, demographics
+
+Make this a supplemental table
+
+```{r echo=FALSE}
+holc_exp %>% 
+  filter(city_wells_100m_all > 9) %>%
+  drop_na(pop40_w) %>%
+  as_tibble() %>%
+  group_by(city_state, holc_grade) %>%
+  summarize(total_pop          = sum(pop40_w),
+            wells_1km_preholc  = sum(wells_1km_all_preholc),
+            wells_1km_postholc = sum(wells_1km_all_postholc)) #%>%
+#arrange(desc())
+```
+
+# Wells
+
+```{r echo=FALSE}
+print("n wells within 1 km of HOLC neighborhoods in full dataset:")
+sum(holc_neighborhoods_exp$wells_1km_all)
+
+print("wells in neighborhoods:")
+sum(holc_neighborhoods_exp$wells_0km_all)
+
+print("wells from 0 m to 100 m from HOLC neighborhoods:")
+sum(holc_neighborhoods_exp$wells_100m_all) - sum(holc_neighborhoods_exp$wells_0km_all)
+
+print("wells from 0 m to 1 km from HOLC neighborhoods:")
+sum(holc_neighborhoods_exp$wells_1km_all) - sum(holc_neighborhoods_exp$wells_0km_all)
+```
+
+**Table. Wells without production dates by city**
+
+n wells with no production dates, within 100 m of HOLC neighborhoods:
+
+```{r echo=FALSE}
+d <- wells_all_100m %>% 
+  filter(is.na(spud_date) & is.na(completion_date) &
+           is.na(first_prod_date) & is.na(last_prod_date))
+nrow(d)
+```
+
+n wells with no production dates, within 100 m of HOLC neighborhoods:
+
+```{r echo=FALSE}
+d <- wells_all_0m %>% 
+  filter(is.na(spud_date) & is.na(completion_date) &
+           is.na(first_prod_date) & is.na(last_prod_date))
+nrow(d)
+```
+
+n wells with no production dates by city, restricted to wells inside HOLC neighborhoods:
+
+```{r echo=FALSE}
+holc_neighborhoods_exp %>%
+  mutate(wells_0km_no_dates = wells_0km_all - 
+           (wells_0km_all_preholc + wells_0km_all_postholc)) %>%
+  group_by(city_state) %>%
+  summarize(n_wells_no_dates = sum(wells_0km_no_dates)) %>%
+  filter(n_wells_no_dates > 0) %>%
+  arrange(-n_wells_no_dates)
+```
+
+
+**Table. Wells with no production dates by HOLC grade**
+
+Restricted to wells inside neighborhood boundaries
+
+```{r echo=FALSE}
+holc_neighborhoods_exp %>%
+  mutate(wells_0km_no_dates = wells_0km_all - 
+           (wells_0km_all_preholc + wells_0km_all_postholc)) %>%
+  group_by(holc_grade) %>%
+  summarize(n_wells_no_dates = sum(wells_0km_no_dates)) %>%
+  mutate(perc_no_wells = round(100 * (n_wells_no_dates / 5403), digits = 1)) %>%
+  filter(n_wells_no_dates > 0)
+```
+
+
+**Table. Wells with no production dates by city and HOLC grade**
+
+Restricted to wells inside neighborhood boundaries
+
+```{r echo=FALSE}
+holc_neighborhoods_exp %>%
+  mutate(wells_0km_no_dates = wells_0km_all - 
+           (wells_0km_all_preholc + wells_0km_all_postholc)) %>%
+  group_by(city_state, holc_grade) %>%
+  summarize(n_wells_no_dates = sum(wells_0km_no_dates)) %>%
+  filter(n_wells_no_dates > 0)
+```
+
+Most wells with missing dates were located in neighborhoods graded C (44.0%) or D (31.4%), and only 4.1% of these wells were in A-graded neighborhoods. Nearly half (49.4%) of wells sited inside HOLC-defined neighborhoods that had missing dates were in Los Angeles, and most of these (60.7%) were in D-graded neighborhoods.
+
+
+# Neighborhoods
+
+**Table. Area of neighborhoods by HOLC grade (km^2), all neighborhoods**
+
+```{r echo=FALSE}
+holc_neighborhoods_exp %>%
+  filter(city_wells_100m_all >= 10) %>% 
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  group_by(holc_grade) %>%
+  summarize(area_total  = round(sum(area_sqkm), digits = 1),
+            area_mean   = round(mean(area_sqkm), digits = 2),
+            area_median = round(median(area_sqkm), digits = 2),
+            area_sd     = round(sd(area_sqkm), digits = 2),
+            area_min    = round(min(area_sqkm), digits = 2),
+            area_max    = round(max(area_sqkm), digits = 2))
+```
+
+**Table. Area of neighborhoods by HOLC grade (km^2), exposed neighborhoods**
+
+```{r echo=FALSE}
+holc_neighborhoods_exp %>%
+  filter(wells_0km_all_preholc > 0 | wells_0km_all_postholc > 0) %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  group_by(holc_grade) %>%
+  summarize(area_mean   = round(mean(area_sqkm), digits = 2),
+            area_median = round(median(area_sqkm), digits = 2),
+            area_sd     = round(sd(area_sqkm), digits = 2),
+            area_min    = round(min(area_sqkm), digits = 2),
+            area_max    = round(max(area_sqkm), digits = 2))
+```
+
+**Quantiles of neighborhood area, all neighborhoods**
+
+```{r echo=FALSE}
+View(holc_neighborhoods_exp$area_sqkm)
+```
+
+**Quantiles of neighborhood area, all neighborhoods**
+
+```{r echo=FALSE}
+quantile(subset(holc_neighborhoods_exp, 
+                wells_0km_all_preholc > 0 | wells_0km_all_postholc > 0)$area_sqkm)
+```
+
+
+# Exposure normalized by area
+
+## Wells within 0 m, i.e., within neighborhood
+
+### All
+
+**Table. Wells per km^2 among all neighborhoods**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm  = (wells_0km_all  / area_sqkm)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_sqkm),
+            median = median(wells_per_sqkm),
+            sd     = sd(wells_per_sqkm),
+            min    = min(wells_per_sqkm),
+            max    = max(wells_per_sqkm))
+```
+
+**Table. Pre-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm  = (wells_0km_all  / area_sqkm)) %>%
+  filter(wells_per_sqkm > 0) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_sqkm),
+            median = median(wells_per_sqkm),
+            sd     = sd(wells_per_sqkm),
+            min    = min(wells_per_sqkm),
+            max    = max(wells_per_sqkm))
+```
+
+**Figure Pre-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm  = (wells_0km_all  / area_sqkm)) %>%
+  filter(wells_per_sqkm > 0) %>%
+  ggplot(aes(holc_grade, wells_per_sqkm)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, colour = "darkred", geom = "point",
+               shape = 18, size = 5) +
+  #ylim(0, 10) +
+  theme_classic()
+```
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm  = (wells_0km_all  / area_sqkm)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_sqkm),
+            median = median(wells_per_sqkm),
+            sd     = sd(wells_per_sqkm),
+            min    = min(wells_per_sqkm),
+            max    = max(wells_per_sqkm))
+```
+
+**ANOVA**
+
+```{r echo=FALSE}
+anova(lm((wells_0km_all  / area_sqkm) ~ as.factor(holc_grade), 
+         data = subset(holc_exp, wells_0km_all > 0)))
+```
+
+
+### Pre-appraisal
+
+**Table. Pre-HOLC wells per km^2 among all neighborhoods**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm_pre  = (wells_0km_all_preholc  / area_sqkm)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_sqkm_pre),
+            median = median(wells_per_sqkm_pre),
+            sd     = sd(wells_per_sqkm_pre),
+            min    = min(wells_per_sqkm_pre),
+            max    = max(wells_per_sqkm_pre))
+```
+
+**Table. Pre-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm_pre  = (wells_0km_all_preholc  / area_sqkm)) %>%
+  filter(wells_per_sqkm_pre > 0) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_sqkm_pre),
+            median = median(wells_per_sqkm_pre),
+            sd     = sd(wells_per_sqkm_pre),
+            min    = min(wells_per_sqkm_pre),
+            max    = max(wells_per_sqkm_pre))
+```
+
+**Figure Pre-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm_pre  = (wells_0km_all_preholc  / area_sqkm)) %>%
+  filter(wells_per_sqkm_pre > 0) %>%
+  ggplot(aes(holc_grade, wells_per_sqkm_pre)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, colour = "darkred", geom = "point",
+               shape = 18, size = 5) +
+  #ylim(0, 10) +
+  theme_classic()
+```
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm_pre  = (wells_0km_all_preholc  / area_sqkm)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_sqkm_pre),
+            median = median(wells_per_sqkm_pre),
+            sd     = sd(wells_per_sqkm_pre),
+            min    = min(wells_per_sqkm_pre),
+            max    = max(wells_per_sqkm_pre))
+```
+
+**ANOVA**
+
+```{r echo=FALSE}
+anova(lm((wells_0km_all_preholc  / area_sqkm) ~ as.factor(holc_grade), 
+         data = subset(holc_exp, wells_0km_all_preholc > 0)))
+```
+
+### Post-appraisal
+
+**Table. Post-HOLC wells per km^2 among all neighborhoods**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm_post  = (wells_0km_all_postholc  / area_sqkm)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_sqkm_post),
+            median = median(wells_per_sqkm_post),
+            sd     = sd(wells_per_sqkm_post),
+            min    = min(wells_per_sqkm_post),
+            max    = max(wells_per_sqkm_post))
+```
+
+**Table. Post-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm_post  = (wells_0km_all_postholc  / area_sqkm)) %>%
+  filter(wells_per_sqkm_post > 0) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_sqkm_post),
+            median = median(wells_per_sqkm_post),
+            sd     = sd(wells_per_sqkm_post),
+            min    = min(wells_per_sqkm_post),
+            max    = max(wells_per_sqkm_post))
+```
+
+**Figure. Post-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm_post  = (wells_0km_all_postholc  / area_sqkm)) %>%
+  filter(wells_per_sqkm_post > 0) %>%
+  ggplot(aes(holc_grade, wells_per_sqkm_post)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, colour = "darkred", geom = "point",
+               shape = 18, size = 5) +
+  #ylim(0, 10) +
+  theme_classic()
+```
+
+
+```{r echo=FALSE}
+anova(lm((wells_0km_all_postholc  / area_sqkm) ~ as.factor(holc_grade), 
+         data = holc_exp))
+```
+
+## Wells within 100 m, i.e., within neighborhood
+
+### All
+
+**Table. Wells per km^2 among all neighborhoods**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm  = (wells_100m_all  / area_sqkm)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_sqkm),
+            median = median(wells_per_sqkm),
+            sd     = sd(wells_per_sqkm),
+            min    = min(wells_per_sqkm),
+            max    = max(wells_per_sqkm))
+```
+
+**Table. Pre-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm  = (wells_100m_all  / area_sqkm)) %>%
+  filter(wells_per_sqkm > 0) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_sqkm),
+            median = median(wells_per_sqkm),
+            sd     = sd(wells_per_sqkm),
+            min    = min(wells_per_sqkm),
+            max    = max(wells_per_sqkm))
+```
+
+**Figure Pre-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm  = (wells_100m_all  / area_sqkm)) %>%
+  filter(wells_per_sqkm > 0) %>%
+  ggplot(aes(holc_grade, wells_per_sqkm)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, colour = "darkred", geom = "point",
+               shape = 18, size = 5) +
+  #ylim(0, 10) +
+  theme_classic()
+```
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm  = (wells_100m_all  / area_sqkm)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_sqkm),
+            median = median(wells_per_sqkm),
+            sd     = sd(wells_per_sqkm),
+            min    = min(wells_per_sqkm),
+            max    = max(wells_per_sqkm))
+```
+
+**ANOVA**
+
+```{r echo=FALSE}
+anova(lm((wells_100m_all  / area_sqkm) ~ as.factor(holc_grade), 
+         data = subset(holc_exp, wells_100m_all > 0)))
+```
+
+
+### Pre-appraisal
+
+**Table. Pre-HOLC wells per km^2 among all neighborhoods**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm_pre  = (wells_100m_all_preholc  / area_sqkm)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_sqkm_pre),
+            median = median(wells_per_sqkm_pre),
+            sd     = sd(wells_per_sqkm_pre),
+            min    = min(wells_per_sqkm_pre),
+            max    = max(wells_per_sqkm_pre))
+```
+
+**Table. Pre-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm_pre  = (wells_100m_all_preholc  / area_sqkm)) %>%
+  filter(wells_per_sqkm_pre > 0) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_sqkm_pre),
+            median = median(wells_per_sqkm_pre),
+            sd     = sd(wells_per_sqkm_pre),
+            min    = min(wells_per_sqkm_pre),
+            max    = max(wells_per_sqkm_pre))
+```
+
+**Figure Pre-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm_pre  = (wells_100m_all_preholc  / area_sqkm)) %>%
+  filter(wells_per_sqkm_pre > 0) %>%
+  ggplot(aes(holc_grade, wells_per_sqkm_pre)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, colour = "darkred", geom = "point",
+               shape = 18, size = 5) +
+  #ylim(0, 10) +
+  theme_classic()
+```
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm_pre  = (wells_100m_all_preholc  / area_sqkm)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_sqkm_pre),
+            median = median(wells_per_sqkm_pre),
+            sd     = sd(wells_per_sqkm_pre),
+            min    = min(wells_per_sqkm_pre),
+            max    = max(wells_per_sqkm_pre))
+```
+
+**ANOVA**
+
+```{r echo=FALSE}
+anova(lm((wells_100m_all_preholc  / area_sqkm) ~ as.factor(holc_grade), 
+         data = subset(holc_exp, wells_100m_all_preholc > 0)))
+```
+
+### Post-appraisal
+
+**Table. Post-HOLC wells per km^2 among all neighborhoods**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm_post  = (wells_100m_all_postholc  / area_sqkm)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_sqkm_post),
+            median = median(wells_per_sqkm_post),
+            sd     = sd(wells_per_sqkm_post),
+            min    = min(wells_per_sqkm_post),
+            max    = max(wells_per_sqkm_post))
+```
+
+**Table. Post-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm_post  = (wells_100m_all_postholc  / area_sqkm)) %>%
+  filter(wells_per_sqkm_post > 0) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_sqkm_post),
+            median = median(wells_per_sqkm_post),
+            sd     = sd(wells_per_sqkm_post),
+            min    = min(wells_per_sqkm_post),
+            max    = max(wells_per_sqkm_post))
+```
+
+**Figure. Post-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm_post  = (wells_100m_all_postholc  / area_sqkm)) %>%
+  filter(wells_per_sqkm_post > 0) %>%
+  ggplot(aes(holc_grade, wells_per_sqkm_post)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, colour = "darkred", geom = "point",
+               shape = 18, size = 5) +
+  #ylim(0, 10) +
+  theme_classic()
+```
+
+**ANOVA**
+
+```{r echo=FALSE}
+anova(lm((wells_100m_all_postholc  / area_sqkm) ~ as.factor(holc_grade), 
+         data = subset(holc_exp, wells_100m_all_postholc > 0)))
+```
+
+## Wells within 1 km of neighborhood
+
+### Pre-appraisal
+
+**Table. Pre-HOLC wells per km^2 among all neighborhoods**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm_pre  = (wells_1km_all_preholc  / area_sqkm)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_sqkm_pre),
+            median = median(wells_per_sqkm_pre),
+            sd     = sd(wells_per_sqkm_pre),
+            min    = min(wells_per_sqkm_pre),
+            max    = max(wells_per_sqkm_pre))
+```
+
+**Table. Pre-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm_pre  = (wells_1km_all_preholc  / area_sqkm)) %>%
+  filter(wells_per_sqkm_pre > 0) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_sqkm_pre),
+            median = median(wells_per_sqkm_pre),
+            sd     = sd(wells_per_sqkm_pre),
+            min    = min(wells_per_sqkm_pre),
+            max    = max(wells_per_sqkm_pre))
+```
+
+**Figure Pre-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm_pre  = (wells_1km_all_preholc  / area_sqkm)) %>%
+  filter(wells_per_sqkm_pre > 0) %>%
+  ggplot(aes(holc_grade, wells_per_sqkm_pre)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, colour = "darkred", geom = "point",
+               shape = 18, size = 5) +
+  #ylim(0, 10) +
+  theme_classic()
+```
+
+**ANOVA**
+
+```{r echo=FALSE}
+anova(lm((wells_1km_all_preholc  / area_sqkm) ~ as.factor(holc_grade), 
+         data = subset(holc_exp, wells_1km_all_preholc > 0)))
+```
+
+### Post-appraisal
+
+**Table. Post-HOLC wells per km^2 among all neighborhoods**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm_post  = (wells_1km_all_postholc  / area_sqkm)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_sqkm_post),
+            median = median(wells_per_sqkm_post),
+            sd     = sd(wells_per_sqkm_post),
+            min    = min(wells_per_sqkm_post),
+            max    = max(wells_per_sqkm_post))
+```
+
+**Table. Post-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm_post  = (wells_1km_all_postholc  / area_sqkm)) %>%
+  filter(wells_per_sqkm_post > 0) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_sqkm_post),
+            median = median(wells_per_sqkm_post),
+            sd     = sd(wells_per_sqkm_post),
+            min    = min(wells_per_sqkm_post),
+            max    = max(wells_per_sqkm_post))
+```
+
+**Figure. Post-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_sqkm_post  = (wells_1km_all_postholc  / area_sqkm)) %>%
+  filter(wells_per_sqkm_post > 0) %>%
+  ggplot(aes(holc_grade, wells_per_sqkm_post)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, colour = "darkred", geom = "point",
+               shape = 18, size = 5) +
+  #ylim(0, 10) +
+  theme_classic()
+```
+
+**ANOVA**
+
+```{r echo=FALSE}
+anova(lm((wells_1km_all_preholc  / area_sqkm) ~ as.factor(holc_grade), 
+         data = subset(holc_exp, wells_1km_all_postholc > 0)))
+```
+
+
+# Exposure normalized by population
+
+*Note: restricted to the 15 cities with wells and census data*
+
+## 0 km, i.e., within neighborhood
+
+### All
+
+**Table. Pre-HOLC wells per 1,000 people among all neighborhoods**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000  = 1000 * (wells_0km_all  / pop40_w)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_1000),
+            median = median(wells_per_1000),
+            sd     = sd(wells_per_1000),
+            min    = min(wells_per_1000),
+            max    = max(wells_per_1000))
+```
+
+**Table. Pre-HOLC wells per 1,000 people among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000  = 1000 * (wells_0km_all  / pop40_w)) %>%
+  filter(wells_per_1000 > 0) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_1000),
+            median = median(wells_per_1000),
+            sd     = sd(wells_per_1000),
+            min    = min(wells_per_1000),
+            max    = max(wells_per_1000))
+```
+
+**Figure Pre-HOLC wells per 1,0000 people among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000  = 1000 * (wells_0km_all  / pop40_w)) %>%
+  filter(wells_per_1000 > 0) %>%
+  ggplot(aes(holc_grade, wells_per_1000)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, colour = "darkred", geom = "point",
+               shape = 18, size = 5) +
+  #ylim(0, 10) +
+  theme_classic()
+```
+
+**ANOVA**
+
+```{r echo=FALSE}
+anova(lm((wells_1km_all  / pop40_w) ~ as.factor(holc_grade), 
+         data = subset(holc_exp, wells_0km_all > 0)))
+```
+
+### Pre-appraisal
+
+**Table. Pre-HOLC wells per 1,000 people among all neighborhoods**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000_pre  = 1000 * (wells_0km_all_preholc  / pop40_w)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_1000_pre),
+            median = median(wells_per_1000_pre),
+            sd     = sd(wells_per_1000_pre),
+            min    = min(wells_per_1000_pre),
+            max    = max(wells_per_1000_pre))
+```
+
+**Table. Pre-HOLC wells per 1,000 people among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000_pre  = 1000 * (wells_0km_all_preholc  / pop40_w)) %>%
+  filter(wells_per_1000_pre > 0) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_1000_pre),
+            median = median(wells_per_1000_pre),
+            sd     = sd(wells_per_1000_pre),
+            min    = min(wells_per_1000_pre),
+            max    = max(wells_per_1000_pre))
+```
+
+**Figure Pre-HOLC wells per 1,0000 people among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000_pre  = 1000 * (wells_0km_all_preholc  / pop40_w)) %>%
+  filter(wells_per_1000_pre > 0) %>%
+  ggplot(aes(holc_grade, wells_per_1000_pre)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, colour = "darkred", geom = "point",
+               shape = 18, size = 5) +
+  #ylim(0, 10) +
+  theme_classic()
+```
+
+**ANOVA**
+
+```{r echo=FALSE}
+anova(lm((wells_1km_all_preholc  / pop40_w) ~ as.factor(holc_grade), 
+         data = subset(holc_exp, wells_0km_all_preholc > 0)))
+```
+
+### Post-appraisal
+
+**Table. Post-HOLC wells per km^2 among all neighborhoods**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000_post  = 1000 * (wells_0km_all_postholc  / pop40_w)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_1000_post),
+            median = median(wells_per_1000_post),
+            sd     = sd(wells_per_1000_post),
+            min    = min(wells_per_1000_post),
+            max    = max(wells_per_1000_post))
+```
+
+**Table. Post-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000_post  = 1000 * (wells_0km_all_postholc  / pop40_w)) %>%
+  filter(wells_per_1000_post > 0) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_1000_post),
+            median = median(wells_per_1000_post),
+            sd     = sd(wells_per_1000_post),
+            min    = min(wells_per_1000_post),
+            max    = max(wells_per_1000_post))
+```
+
+**Figure. Post-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000_post  = 1000 * (wells_0km_all_postholc  / pop40_w)) %>%
+  filter(wells_per_1000_post > 0) %>%
+  ggplot(aes(holc_grade, wells_per_1000_post)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, colour = "darkred", geom = "point",
+               shape = 18, size = 5) +
+  #ylim(0, 10) +
+  theme_classic()
+```
+
+**ANOVA**
+
+```{r echo=FALSE}
+anova(lm((wells_0km_all_postholc  / pop40_w) ~ as.factor(holc_grade), 
+         data = subset(holc_exp, wells_0km_all_postholc > 0)))
+```
+
+## Wells within 100 m of boundary
+
+### All
+
+**Table. Wells per 1,000 people among all neighborhoods**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000  = 1000 * (wells_100m_all  / pop40_w)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_1000),
+            median = median(wells_per_1000),
+            sd     = sd(wells_per_1000),
+            min    = min(wells_per_1000),
+            max    = max(wells_per_1000))
+```
+
+**Table. Pre-HOLC wells per 1,000 people among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000  = 1000 * (wells_100m_all  / pop40_w)) %>%
+  filter(wells_per_1000 > 0) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_1000),
+            median = median(wells_per_1000),
+            sd     = sd(wells_per_1000),
+            min    = min(wells_per_1000),
+            max    = max(wells_per_1000))
+```
+
+**Figure Pre-HOLC wells per 1,0000 people among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000  = 1000 * (wells_100m_all  / pop40_w)) %>%
+  filter(wells_per_1000 > 0) %>%
+  ggplot(aes(holc_grade, wells_per_1000)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, colour = "darkred", geom = "point",
+               shape = 18, size = 5) +
+  #ylim(0, 10) +
+  theme_classic()
+```
+
+**ANOVA**
+
+```{r echo=FALSE}
+anova(lm((wells_100m_all  / pop40_w) ~ as.factor(holc_grade), 
+         data = subset(holc_exp, wells_100m_all > 0)))
+```
+
+### Pre-appraisal
+
+**Table. Pre-HOLC wells per 1,000 people among all neighborhoods**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000_pre  = 1000 * (wells_100m_all_preholc  / pop40_w)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_1000_pre),
+            median = median(wells_per_1000_pre),
+            sd     = sd(wells_per_1000_pre),
+            min    = min(wells_per_1000_pre),
+            max    = max(wells_per_1000_pre))
+```
+
+**Table. Pre-HOLC wells per 1,000 people among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000_pre  = 1000 * (wells_100m_all_preholc  / pop40_w)) %>%
+  filter(wells_per_1000_pre > 0) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_1000_pre),
+            median = median(wells_per_1000_pre),
+            sd     = sd(wells_per_1000_pre),
+            min    = min(wells_per_1000_pre),
+            max    = max(wells_per_1000_pre))
+```
+
+**Figure Pre-HOLC wells per 1,0000 people among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000_pre  = 1000 * (wells_100m_all_preholc  / pop40_w)) %>%
+  filter(wells_per_1000_pre > 0) %>%
+  ggplot(aes(holc_grade, wells_per_1000_pre)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, colour = "darkred", geom = "point",
+               shape = 18, size = 5) +
+  #ylim(0, 10) +
+  theme_classic()
+```
+
+**ANOVA**
+
+```{r echo=FALSE}
+anova(lm((wells_100m_all_preholc  / pop40_w) ~ as.factor(holc_grade), 
+         data = subset(holc_exp, wells_100m_all_preholc > 0)))
+```
+
+### Post-appraisal
+
+**Table. Post-HOLC wells per km^2 among all neighborhoods**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000_post  = 1000 * (wells_100m_all_postholc  / pop40_w)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_1000_post),
+            median = median(wells_per_1000_post),
+            sd     = sd(wells_per_1000_post),
+            min    = min(wells_per_1000_post),
+            max    = max(wells_per_1000_post))
+```
+
+**Table. Post-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000_post  = 1000 * (wells_100m_all_postholc  / pop40_w)) %>%
+  filter(wells_per_1000_post > 0) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_1000_post),
+            median = median(wells_per_1000_post),
+            sd     = sd(wells_per_1000_post),
+            min    = min(wells_per_1000_post),
+            max    = max(wells_per_1000_post))
+```
+
+**Figure. Post-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000_post  = 1000 * (wells_100m_all_postholc  / pop40_w)) %>%
+  filter(wells_per_1000_post > 0) %>%
+  ggplot(aes(holc_grade, wells_per_1000_post)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, colour = "darkred", geom = "point",
+               shape = 18, size = 5) +
+  #ylim(0, 10) +
+  theme_classic()
+```
+
+**ANOVA**
+
+```{r echo=FALSE}
+anova(lm((wells_100m_all_postholc  / pop40_w) ~ as.factor(holc_grade), 
+         data = subset(holc_exp, wells_100m_all_postholc > 0)))
+```
+
+## Wells within 1 km of boundary
+
+### All
+
+**Table. Pre-HOLC wells per 1,000 people among all neighborhoods**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000  = 1000 * (wells_1km_all  / pop40_w)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_1000),
+            median = median(wells_per_1000),
+            sd     = sd(wells_per_1000),
+            min    = min(wells_per_1000),
+            max    = max(wells_per_1000))
+```
+
+**Table. Pre-HOLC wells per 1,000 people among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000  = 1000 * (wells_1km_all  / pop40_w)) %>%
+  filter(wells_per_1000 > 0) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_1000),
+            median = median(wells_per_1000),
+            sd     = sd(wells_per_1000),
+            min    = min(wells_per_1000),
+            max    = max(wells_per_1000))
+```
+
+**Figure Pre-HOLC wells per 1,0000 people among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000  = 1000 * (wells_1km_all  / pop40_w)) %>%
+  filter(wells_per_1000 > 0) %>%
+  ggplot(aes(holc_grade, wells_per_1000)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, colour = "darkred", geom = "point",
+               shape = 18, size = 5) +
+  #ylim(0, 10) +
+  theme_classic()
+```
+
+**ANOVA**
+
+```{r echo=FALSE}
+anova(lm((wells_1km_all  / pop40_w) ~ as.factor(holc_grade), 
+         data = subset(holc_exp, wells_1km_all > 0 & pop40_w > 0)))
+```
+
+### Pre-appraisal
+
+**Table. Pre-HOLC wells per 1,000 people among all neighborhoods**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000_pre  = 1000 * (wells_1km_all_preholc  / pop40_w)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_1000_pre),
+            median = median(wells_per_1000_pre),
+            sd     = sd(wells_per_1000_pre),
+            min    = min(wells_per_1000_pre),
+            max    = max(wells_per_1000_pre))
+```
+
+**Table. Pre-HOLC wells per 1,000 people among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000_pre  = 1000 * (wells_1km_all_preholc  / pop40_w)) %>%
+  filter(wells_per_1000_pre > 0) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_1000_pre),
+            median = median(wells_per_1000_pre),
+            sd     = sd(wells_per_1000_pre),
+            min    = min(wells_per_1000_pre),
+            max    = max(wells_per_1000_pre))
+```
+
+**Figure Pre-HOLC wells per 1,0000 people among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000_pre  = 1000 * (wells_1km_all_preholc  / pop40_w)) %>%
+  filter(wells_per_1000_pre > 0) %>%
+  ggplot(aes(holc_grade, wells_per_1000_pre)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, colour = "darkred", geom = "point",
+               shape = 18, size = 5) +
+  #ylim(0, 10) +
+  theme_classic()
+```
+
+**ANOVA**
+
+```{r echo=FALSE}
+anova(lm((wells_1km_all_preholc  / pop40_w) ~ as.factor(holc_grade), 
+         data = subset(holc_exp, wells_1km_all_preholc > 0 & pop40_w > 0)))
+```
+
+### Post-appraisal
+
+**Table. Post-HOLC wells per km^2 among all neighborhoods**
+
+```{r echo=FALSE}
+holc_census %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000_post  = 1000 * (wells_1km_all_postholc  / pop40_w)) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_1000_post),
+            median = median(wells_per_1000_post),
+            sd     = sd(wells_per_1000_post),
+            min    = min(wells_per_1000_post),
+            max    = max(wells_per_1000_post))
+```
+
+**Table. Post-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000_post  = 1000 * (wells_1km_all_postholc  / pop40_w)) %>%
+  filter(wells_per_1000_post > 0) %>%
+  group_by(holc_grade) %>%
+  summarize(mean   = mean(wells_per_1000_post),
+            median = median(wells_per_1000_post),
+            sd     = sd(wells_per_1000_post),
+            min    = min(wells_per_1000_post),
+            max    = max(wells_per_1000_post))
+```
+
+**Figure. Post-HOLC wells per km^2 among neighborhoods with wells**
+
+```{r echo=FALSE}
+holc_exp %>%
+  as_tibble() %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  mutate(wells_per_1000_post  = 1000 * (wells_1km_all_postholc  / pop40_w)) %>%
+  filter(wells_per_1000_post > 0) %>%
+  ggplot(aes(holc_grade, wells_per_1000_post)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, colour = "darkred", geom = "point",
+               shape = 18, size = 5) +
+  #ylim(0, 10) +
+  theme_classic()
+```
+
+**ANOVA**
+
+```{r echo=FALSE}
+anova(lm((wells_1km_all_postholc  / pop40_w) ~ as.factor(holc_grade), 
+         data = subset(holc_exp, wells_1km_all_postholc > 0 & pop40_w > 0)))
+```
+

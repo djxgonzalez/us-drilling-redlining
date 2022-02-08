@@ -1,0 +1,15 @@
+"0","holc_buffer_1km_injection_postholc <-
+  read_csv(""../../data/interim/holc_neighborhoods_buffer_1km_wells_injection_postholc.csv"") %>%
+  mutate(neighborhood = as.factor(neighborhood)) %>%
+  rename(buffer_1km_injection_postholc_n = buffer_1km_wells_injection_n) %>%
+  select(-year_appraised)
+"
+"2","
+[36m──[39m [1m[1mColumn specification[1m[22m [36m───────────────────────────────────────────────────────────────[39m
+cols(
+  neighborhood = [32mcol_double()[39m,
+  year_appraised = [32mcol_double()[39m,
+  buffer_1km_wells_injection_n = [32mcol_double()[39m
+)
+
+"

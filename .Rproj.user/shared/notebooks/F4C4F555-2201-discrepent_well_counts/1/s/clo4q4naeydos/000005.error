@@ -1,0 +1,1 @@
+{"frames":[],"message":"Error: unexpected symbol in:\n\"  mutate(wells_pre_post = wells_100m_all_preholc + wells_100m_all_postholc) %>%\n  filter(wells_pre_post > wells_100m_all) select\"\n"}

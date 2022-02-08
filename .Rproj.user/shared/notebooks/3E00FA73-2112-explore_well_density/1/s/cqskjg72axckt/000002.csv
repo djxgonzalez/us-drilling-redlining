@@ -1,0 +1,3 @@
+"0","d <- holc_neighborhoods_exp %>%"
+"0","  filter(holc_grade == ""D"") %>%"
+"0","  filter(density_change < -10)"

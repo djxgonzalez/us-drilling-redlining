@@ -1,0 +1,5 @@
+"0","anova(lm((wells_0km_postholc_all  / area_sqkm) ~ as.factor(holc_grade), "
+"0","         data = holc_exp))"
+"2","Error in eval(predvars, data, env) : 
+  object 'wells_0km_postholc_all' not found
+"

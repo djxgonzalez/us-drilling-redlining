@@ -1,0 +1,8 @@
+"0","d <- wells_all_0m %>% "
+"0","  filter(is.na(spud_date) & is.na(completion_date) &"
+"0","           is.na(first_prod_date) & is.na(last_prod_date))"
+"0","nrow(d)"
+"1","[1]"
+"1"," 5403"
+"1","
+"

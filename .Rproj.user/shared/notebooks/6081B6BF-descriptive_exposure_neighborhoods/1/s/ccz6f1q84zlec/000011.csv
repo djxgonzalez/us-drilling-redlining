@@ -1,0 +1,21 @@
+"0","fig <- holc_exposure %>% "
+"2","Warning messages:
+"
+"2","1: "
+"2","In readChar(file, size, TRUE) :"
+"2"," truncating string with embedded nuls
+"
+"2","2: "
+"2","In readChar(file, size, TRUE) :"
+"2"," truncating string with embedded nuls
+"
+"0","  filter(holc_grade != ""E"") %>%"
+"0","  drop_na(holc_grade) %>%"
+"0","  ggplot() +"
+"0","  geom_bar(aes(holc_grade, buffer_1km_wells_preholc_n), stat = ""identity"","
+"0","           fill = ""#ffffff"") +"
+"0","  ylim(0, 10000) +"
+"0","  labs(x = ""HOLC Grade"", y = ""Pre-appraisal wells (n)"") +"
+"0","  dark_theme_classic()"
+"0","ggsave(""pres_fig_wells_all_preholc.png"", plot = fig, "
+"0","       height = 5, width = 8, device = ""png"", path = ""../figures/"")"

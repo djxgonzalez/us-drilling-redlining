@@ -1,0 +1,8 @@
+"0","fig <- holc_exposure %>% 
+  filter(production_type == ""INJECTION"")
+"
+"2","Error: Problem with `filter()` input `..1`.
+[31mx[39m object 'production_type' not found
+[34mℹ[39m Input `..1` is `production_type == ""INJECTION""`.
+[90mRun `rlang::last_error()` to see where the error occurred.[39m
+"

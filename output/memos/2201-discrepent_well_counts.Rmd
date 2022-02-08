@@ -1,0 +1,254 @@
+---
+title: "Memo - Descrepant well counts"
+output:
+  html_document:
+    theme: flatly
+    highlight: haddock 
+    toc: yes
+    tocdepth: 3
+    toc_float: yes
+    keep_md: true
+    number_sections: true
+---
+
+
+In some cases, there appear to be more wells with dates (i.e., before/after) than all wells. This indicates an error in the data wrangling process. Here I evaluate whether this is an error, how many observations are affected, and how to fix it.
+
+```{r include=FALSE, setup}
+source("../../code/0-setup/01-setup.R")
+library("ggspatial")
+```
+
+```{r include=FALSE, data_input}
+holc_neighborhoods_exp <- 
+  readRDS("../../data/processed/holc_neighborhoods_exp.rds")
+```
+
+
+```{r echo=FALSE}
+holc_neighborhoods_exp %>% 
+  mutate(wells_pre_post = wells_100m_all_preholc + wells_100m_all_postholc) %>%
+  ggplot() +
+  geom_point(aes(wells_100m_all, wells_pre_post)) +
+  geom_abline(slope = 1, intercept = 0) + 
+  theme_classic()
+```
+
+Same as above, more zoomed in
+
+```{r echo=FALSE}
+holc_neighborhoods_exp %>% 
+  mutate(wells_pre_post = wells_100m_all_preholc + wells_100m_all_postholc) %>%
+  ggplot() +
+  geom_point(aes(wells_100m_all, wells_pre_post)) +
+  geom_abline(slope = 1, intercept = 0) + 
+  xlim(0, 20) +
+  ylim(0, 20) +
+  theme_classic()
+```
+
+There is in fact an error here...
+
+```{r echo=FALSE}
+holc_neighborhoods_exp %>% 
+  mutate(wells_pre_post = wells_100m_all_preholc + wells_100m_all_postholc) %>%
+  filter(wells_pre_post > wells_100m_all) %>%
+  nrow()
+```
+
+...affecting 68 of the 768 exposed neighborhoods. No bueno. Let's see where these neighborhoods are and whether they're randomly distributed...
+
+```{r}
+d <- holc_neighborhoods_exp %>% 
+  mutate(wells_pre_post = wells_100m_all_preholc + wells_100m_all_postholc) %>%
+  filter(wells_pre_post > wells_100m_all) 
+summary(as.factor(d$city_state))
+```
+
+No clear pattern here, this does seem random. A few neighborhoods had > 0 pre/post-HOLC wells but no 'all' wells. Let's see which neighborhoods those were.
+
+```{r}
+d <- holc_neighborhoods_exp %>% 
+  mutate(wells_pre_post = wells_100m_all_preholc + wells_100m_all_postholc) %>%
+  filter(wells_pre_post > wells_100m_all) %>%
+  filter(wells_100m_all == 0)
+d %>% select(city_state, neighborhood, wells_100m_all, wells_100m_all_preholc,
+             wells_100m_all_postholc)
+```
+
+Neighborhood `2624` in New York had 17 post-HOLC wells but 0 'all' wells. Let's plot that neighborhood adapting  code from Figure S3...
+
+**All wells**
+
+```{r echo=FALSE}
+# data input
+holc_ny <- 
+  st_read("../../data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp") %>%
+  filter(neighborho == "2624") %>%
+  st_transform(crs_nad83)
+wells_ny_all <- readRDS("../../data/interim/wells_interim.rds") %>%
+  filter(county_parish == "NEW YORK (NY)") %>%
+  filter(production_type == "OIL" | 
+           production_type == "GAS" |
+           production_type == "OIL & GAS" |
+           production_type == "INJECTION" |
+           production_type == "UNKNOWN") %>%
+  drop_na(longitude) %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = crs_nad83)
+
+figure_s3b <- ggplot() +
+  geom_sf(data = holc_ny, fill = "gray", lwd = 0.6, alpha = 0.5) +
+  geom_sf(data = wells_ny_all, shape = 4, size = 3, color = "black") +
+  annotation_scale(location = "br", width_hint = 0.25) +
+  xlim(-74.01, -73.97) + ylim(40.70, 40.73) +
+  theme_bw() +
+  theme(legend.position = "none")
+figure_s3b
+```
+
+**Post-HOLC wells**
+
+```{r echo=FALSE}
+#### NOTE - no pre-HOLC wells
+wells_ny_postholc <- readRDS("../../data/interim/wells_interim.rds") %>%
+  filter(county_parish == "NEW YORK (NY)") %>%
+  drop_na(longitude) %>%
+  filter(production_type == "OIL" | 
+           production_type == "GAS" |
+           production_type == "OIL & GAS" |
+           production_type == "INJECTION" |
+           production_type == "UNKNOWN") %>%
+  filter(spud_date >= as.Date("1939-01-01") |  # post-appraisal date for all cities
+           completion_date >= as.Date("1938-01-01") |
+           first_prod_date >= as.Date("1938-01-01") |
+           last_prod_date  >= as.Date("1938-01-01")) %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = crs_nad83)
+
+figure_s3b <- ggplot() +
+  geom_sf(data = holc_ny, fill = "gray", lwd = 0.6, alpha = 0.5) +
+  geom_sf(data = wells_ny_postholc, shape = 4, size = 3, color = "red") +
+  annotation_scale(location = "br", width_hint = 0.25) +
+  xlim(-74.01, -73.97) + ylim(40.70, 40.73) +
+  theme_bw() +
+  theme(legend.position = "none")
+figure_s3b
+```
+
+In this neighborhood, the 'post-holc' wells count within 100 m seems correct. There should be more 'all' wells. I'll check one more neighborhood, 7520 in Los Angeles, which has 2 post-HOLC wells and 0 all wells.
+
+```{r echo=FALSE}
+# data input
+holc_la <- 
+  st_read("../../data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp") %>%
+  filter(neighborho == "7520") %>%
+  st_transform(crs_nad83)
+wells_la_all <- readRDS("../../data/interim/wells_interim.rds") %>%
+  filter(county_parish == "LOS ANGELES (CA)") %>%
+  filter(production_type == "OIL" | 
+           production_type == "GAS" |
+           production_type == "OIL & GAS" |
+           production_type == "INJECTION" |
+           production_type == "UNKNOWN") %>%
+  drop_na(longitude) %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = crs_nad83)
+
+figure_s3b <- ggplot() +
+  geom_sf(data = holc_la, fill = "gray", lwd = 0.6, alpha = 0.5) +
+  geom_sf(data = wells_la_all, shape = 4, size = 3, color = "black") +
+  annotation_scale(location = "br", width_hint = 0.25) +
+  xlim(-118.38, -118.32) + ylim(33.90, 33.96) +
+  theme_bw() +
+  theme(legend.position = "none")
+figure_s3b
+```
+
+**Post-HOLC wells**
+
+```{r echo=FALSE}
+wells_la_postholc <- readRDS("../../data/interim/wells_interim.rds") %>%
+  filter(county_parish == "LOS ANGELES (CA)") %>%
+  drop_na(longitude) %>%
+  filter(production_type == "OIL" | 
+           production_type == "GAS" |
+           production_type == "OIL & GAS" |
+           production_type == "INJECTION" |
+           production_type == "UNKNOWN") %>%
+  filter(spud_date >= as.Date("1939-01-01") |  # post-appraisal date for all cities
+           completion_date >= as.Date("1938-01-01") |
+           first_prod_date >= as.Date("1938-01-01") |
+           last_prod_date  >= as.Date("1938-01-01")) %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = crs_nad83)
+
+figure_s3b <- ggplot() +
+  geom_sf(data = holc_la, fill = "gray", lwd = 0.6, alpha = 0.5) +
+  geom_sf(data = wells_la_postholc, shape = 4, size = 3, color = "red") +
+  annotation_scale(location = "br", width_hint = 0.25) +
+  xlim(-118.38, -118.32) + ylim(33.90, 33.96) +
+  theme_bw() +
+  theme(legend.position = "none")
+figure_s3b
+```
+
+Same issue here, we're counting post-HOLC wells but not all wells. Are we counting wells of the wrong type? I'll check the `wells_interim.rds` dataset
+
+```{r echo=FALSE}
+wells_interim <- readRDS("../../data/interim/wells_interim.rds")
+View(wells_interim)
+```
+
+I think I found the issue. The `wells_interim` dataset includes well types we're not interested in; we just want oil/gas, injection, and unknown wells. I did *not* make this exclusion in the pre/post-HOLC analyses.
+
+One final check: if this is indeed the only problem, then we should not have this issue for, e.g., the oil/gas wells exposure assessment where the exclusion were made. I'll double-check that.
+
+```{r echo=FALSE}
+holc_neighborhoods_exp %>% 
+  mutate(wells_pre_post = wells_100m_oil_gas_preholc + wells_100m_oil_gas_postholc) %>%
+  ggplot() +
+  geom_point(aes(wells_100m_oil_gas, wells_pre_post)) +
+  geom_abline(slope = 1, intercept = 0) + 
+  xlim(0, 30) +
+  ylim(0, 30) +
+  theme_classic()
+```
+
+Okay, so we still have this issue... let's check unknown wells
+
+```{r echo=FALSE}
+holc_neighborhoods_exp %>% 
+  mutate(wells_pre_post = wells_100m_unknown_preholc + wells_100m_unknown_postholc) %>%
+  ggplot() +
+  geom_point(aes(wells_100m_unknown, wells_pre_post)) +
+  geom_abline(slope = 1, intercept = 0) + 
+  xlim(0, 30) +
+  ylim(0, 30) +
+  theme_classic()
+```
+
+So the error must be in the exposure assessment code. I'll check it.
+
+I think I found it! I was sending the unfiltered (i.e., all well types) data to the pre/post analyses, leading to mis-estimation of those wells.
+
+I'll fix this error, re-run the pre/post exposure assessment scripts (that's where the error is), and re-assemble the dataset. Once I do that, I'll verify with the same figures above.
+
+**UPDATE** I made this edit and it did resolve the issue in part. The number of discrepent (i.e., impossible) pre/post-HOLC well counts was cut to ~1/3 of what it was. However, this didn't address everything. Next, I'll go back to the neighborhood with the biggest discrepancy and see what I can find...
+
+Let's go with neighborhood 2624 in New York. It has 0 all-time wells, 0 pre-HOLC wells, and as of now 17 post-HOLC wells.
+
+I re-ran the code above and found an error. There are wells that should be included in the all-time wells that aren't being counted, but these wells *are* being counted in the post-HOLC wells (and they're all post-HOLC). When I look at the code, I re-work the New York City data in the post-HOLC script but not the all-time script; there's my error.
+
+There are still a few remaining errors, though (~30 outside of NYC). When I looked at these, this seems to be restricted to wells where there was a spud/comp/prod date on either side of HOLC appraisal, e.g., for a re-analysis. This would be an error in either the pre- or post-HOLC 
+
+
+---
+
+I've figured it out. There were three errors:
+
+1. In the pre- and post-HOLC exposure assessments, I did not filter the wells to the types we're interested in (oil, gas, oil and gas, injection, unknown). This resulted in an over-count of the pre- and post-HOLC wells in some neighborhoods. I fixed this by editing the code and re-running all pre- and post-HOLC exposure assessments.
+2. In the post-HOLC analyses, I did not exclude wells that had pre-HOLC dates between 1935 and the year of appraisal (I did exclude pre-1935 wells). This resulted in some wells being counted twice, and consequently some neighborhoods had more pre-/post-HOLC wells than all-time wells, an obvious error. I fixed this error mathematically: post-HOLC wells = (post-HOLC wells - (all wells - (pre-HOLC + post-HOLC wells))).
+3. In the all wells (i.e., not pre- or post-HOLC) exposure assessment, I did not combine the New York boroughs into one city, which means when I filtered to cities with wells, these neighborhoods were not included and, consequently, assigned zero wells. This was not an issue for the pre- and post-HOLC analyses. I fixed this error by 
+
+
+```{r}
+
+```
+

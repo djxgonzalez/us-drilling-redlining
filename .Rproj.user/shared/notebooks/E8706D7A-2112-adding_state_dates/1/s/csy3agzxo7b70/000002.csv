@@ -1,0 +1,52 @@
+"0","wells_sf <- readRDS(""../../data/interim/wells_interim.rds"") %>%"
+"0","  drop_na(""longitude"") %>%"
+"0","  st_as_sf(coords = c(""longitude"", ""latitude""), crs = crs_nad83)"
+"0","pa_dates <- read_csv(""../../data/interim/Spud_External_Data.csv"")"
+"2","
+[36m──[39m [1m[1mColumn specification[1m[22m [36m───────────────────────────────────────────────────────────────────────────[39m
+cols(
+  SPUD_DATE = [31mcol_character()[39m,
+  API = [31mcol_character()[39m,
+  OGO_NUM = [31mcol_character()[39m,
+  OPERATOR = [31mcol_character()[39m,
+  REGION = [31mcol_character()[39m,
+  COUNTY = [31mcol_character()[39m,
+  MUNICIPALITY = [31mcol_character()[39m,
+  FARM_NAME = [31mcol_character()[39m,
+  WELL_CODE_DESC = [31mcol_character()[39m,
+  WELL_STATUS = [31mcol_character()[39m,
+  LATITUDE = [32mcol_double()[39m,
+  LONGITUDE = [32mcol_double()[39m,
+  CONFIGURATION = [31mcol_character()[39m,
+  UNCONVENTIONAL = [31mcol_character()[39m
+)
+
+"
+"0","ca_dates <- read_csv(""../../data/raw/cal_gem/doggr_all_wells_may2018.csv"")"
+"2","
+[36m──[39m [1m[1mColumn specification[1m[22m [36m───────────────────────────────────────────────────────────────────────────[39m
+cols(
+  .default = col_character(),
+  OID = [32mcol_double()[39m,
+  OBJECTID = [32mcol_double()[39m,
+  Section = [32mcol_double()[39m,
+  Latitude = [32mcol_double()[39m,
+  Longitude = [32mcol_double()[39m,
+  TotalDepth = [32mcol_double()[39m,
+  RedrillFt = [32mcol_double()[39m,
+  Comments = [33mcol_logical()[39m,
+  HydFrac = [33mcol_logical()[39m
+)
+[36mℹ[39m Use [38;5;251m[48;5;235m[38;5;251m[48;5;235m`spec()`[48;5;235m[38;5;251m[49m[39m for the full column specifications.
+
+"
+"2","4615 parsing failures.
+ row     col           expected actual                                                 file
+2057 HydFrac 1/0/T/F/TRUE/FALSE      Y '../../data/raw/cal_gem/doggr_all_wells_may2018.csv'
+2194 HydFrac 1/0/T/F/TRUE/FALSE      Y '../../data/raw/cal_gem/doggr_all_wells_may2018.csv'
+2278 HydFrac 1/0/T/F/TRUE/FALSE      Y '../../data/raw/cal_gem/doggr_all_wells_may2018.csv'
+2737 HydFrac 1/0/T/F/TRUE/FALSE      Y '../../data/raw/cal_gem/doggr_all_wells_may2018.csv'
+2836 HydFrac 1/0/T/F/TRUE/FALSE      Y '../../data/raw/cal_gem/doggr_all_wells_may2018.csv'
+.... ....... .................. ...... ....................................................
+See problems(...) for more details.
+"

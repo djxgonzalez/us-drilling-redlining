@@ -1,0 +1,7 @@
+"0","holc_exp %>%"
+"0","  filter(city_wells_100m_all >= 10) %>%"
+"0","  as_tibble() %>%"
+"0","  drop_na(pop40_w) %>%"
+"0","  as_tibble() %>%"
+"0","  distinct(city_state, city_wells_1km_all) %>%"
+"0","  arrange(desc(city_wells_1km_all))"

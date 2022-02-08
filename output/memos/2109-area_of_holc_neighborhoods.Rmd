@@ -1,0 +1,123 @@
+---
+title: "Memo - Area of HOLC neighborhoods"
+output:
+   html_notebook:
+    toc: true
+    toc_float: true
+---
+
+## Purpose
+
+The goal of this notebook is to determine whether there are systematic differences int eh size of HOLC-graded neighborhoods. I.e., are A-graded neighborhoods smaller than D-graded neighborhoods among cities?
+
+
+```{r setup, include=FALSE}
+# first set up the environment; we need the `tidyverse` and `sf` packages
+source("../../code/0-setup/01-setup.R")
+```
+
+```{r data_input, include=FALSE}
+# data input
+holc_cities_buffer_3km_wells_all <- 
+  read_csv("../../data/interim/holc_cities_buffer_3km_wells_all.csv")
+holc_neighborhoods <- 
+  st_read("../../data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp") %>%
+  mutate(city = as.factor(city)) %>%
+  st_transform(crs_projected) %>%
+  st_buffer(dist = 0) %>%  # shortcut to address issue with dataset
+  st_transform(crs_nad83) %>%
+  mutate(neighborhood = as.character(neighborho)) %>%
+  distinct(neighborhood, .keep_all = TRUE)
+
+# assembles dataset of neighborhoods in cities near wells, adds area
+cities_near_wells_3km <- holc_cities_buffer_3km_wells_all %>%
+  filter(buffer_3km_wells_all_n >= 10)
+neighborhoods_near_wells_3km <- holc_neighborhoods %>%
+  mutate(city_state = paste(city, "-", state)) %>%
+  filter(city_state %in% cities_near_wells_3km$city_state)
+
+# adds variable with area for each neighborhood (in m^2)
+neighborhoods_near_wells_3km <- neighborhoods_near_wells_3km %>%
+  mutate(area_msquared = as.numeric(st_area(neighborhoods_near_wells_3km)),
+         holc_grade    = as.factor(holc_grade))
+```
+
+#### Histogram. Distribution of neighborhood area (in m^2) by HOLC grade
+
+```{r echo=FALSE, warning=FALSE}
+neighborhoods_near_wells_3km %>%
+  drop_na(holc_grade) %>%
+  ggplot() +
+  geom_histogram(aes(area_msquared), bins = 20) +
+  facet_wrap(. ~ holc_grade) +
+  theme_classic()
+```
+
+#### Boxplot. Distribution of neighborhood area (in m^2) by HOLC grade
+
+*Note: Red diamond is the mean value*
+
+```{r echo=FALSE, warning=FALSE}
+neighborhoods_near_wells_3km %>%
+  drop_na(holc_grade) %>%
+  ggplot(aes(holc_grade, area_msquared)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, colour = "darkred", geom = "point", shape = 18, size = 5) +
+  ylim(0, 4000000) +
+  coord_flip() +
+  theme_classic()
+```
+
+#### Boxplot. Distribution of neighborhood area (in m^2) by HOLC grade (NO OUTLIERS)
+
+*Note: Red diamond is the mean value*
+
+```{r echo=FALSE, warning=FALSE}
+neighborhoods_near_wells_3km %>%
+  drop_na(holc_grade) %>%
+  ggplot(aes(holc_grade, area_msquared)) +
+  geom_boxplot(outlier.shape = NA) +
+  stat_summary(fun = mean, colour = "darkred", geom = "point", shape = 18, size = 5) +
+  ylim(0, 4000000) +
+  coord_flip() +
+  theme_classic()
+```
+
+#### Boxplot. Distribution of neighborhood area (in m^2) by HOLC grade (states)
+
+```{r echo=FALSE, warning=FALSE}
+neighborhoods_near_wells_3km %>%s
+  drop_na(holc_grade) %>%
+  ggplot(aes(holc_grade, area_msquared)) +
+  geom_boxplot(outlier.shape = NA) +
+  ylim(0, 4000000) +
+  facet_wrap(. ~ state) +
+  coord_flip() +
+  theme_classic()
+```
+
+#### Boxplot. Distribution of neighborhood area (in m^2) by HOLC grade (cities)
+
+*Note: X-axis scales from 0 to 4 million m^2*
+
+```{r echo=FALSE, warning=FALSE}
+p <- neighborhoods_near_wells_3km %>%
+  mutate(area_kmsquared = area_msquared / 1000000) %>%
+  drop_na(holc_grade) %>%
+  ggplot(aes(holc_grade, area_kmsquared)) +
+  geom_boxplot(outlier.shape = NA) +
+  stat_summary(fun = mean, colour = "darkred", geom = "point", shape = 18, size = 2) +
+  ylim(0, 4) +
+  labs(x = "HOLC grade", y = "Neighborhood area (km^2)") +
+  facet_wrap(. ~ city_state) +
+  coord_flip() +
+  theme_classic()
+p
+ggsave(filename = "2109-neighborhood_area_cities.png", plot = p, device = "png", 
+       height = 14, width = 12)
+```
+
+There's a considerable range in size of neighborhoods for some cities, e.g., Tulsa, though other cities are more consistent (like Los Angeles). I omitted outliers, which I think explains why some cities don't have distributions for all neighborhoods (it's out of the current scale).
+
+My takeaway is that, given our exposure, it would be helpful to normalize the areas, particularly for cities with lots of wells (like Tulsa). I'll sketch out some ideas based on my conversation with Rachel and Joan today!
+

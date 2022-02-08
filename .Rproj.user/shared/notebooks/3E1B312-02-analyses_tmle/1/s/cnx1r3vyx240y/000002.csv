@@ -1,0 +1,6 @@
+"0","source(""../0-setup/01-setup.R"")"
+"0","#library(""tmle"")   # fxn for targeted maximum likelihood estimation"
+"0","#library(""dbarts"") # necessary for tmle"
+"0","library(""ltmle"")"
+"0","library(""SuperLearner"")"
+"0","SL.library <- c(""SL.glm"",  ""SL.mean"", ""SL.bayesglm"", ""SL.earth"", ""SL.gam"")"

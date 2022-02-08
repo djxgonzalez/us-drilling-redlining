@@ -1,0 +1,16 @@
+"0","wells3 <- wells2 %>%
+  as_tibble() %>% 
+  filter(is.na(spud_date) & is.na(completion_date) & 
+           is.na(first_prod_date) & is.na(last_prod_date)) %>%
+  filter(!is.na(spud_date2) | !is.na(completion_date2)) %>%
+  filter(api_number %in% wells_within_100m$api_number) %>%
+  select(api_number, state,
+         spud_date, spud_date2,
+         completion_date, completion_date2, 
+         first_prod_date, last_prod_date)
+"
+"2","Error: Problem with `filter()` input `..1`.
+[31mx[39m object 'wells_within_100m' not found
+[34mℹ[39m Input `..1` is `api_number %in% wells_within_100m$api_number`.
+[90mRun `rlang::last_error()` to see where the error occurred.[39m
+"

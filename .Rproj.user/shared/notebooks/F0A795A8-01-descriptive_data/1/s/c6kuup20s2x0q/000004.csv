@@ -1,0 +1,10 @@
+"0","holc_exp %>% "
+"0","  filter(city_wells_100m_all > 9) %>%"
+"0","  drop_na(pop40_w) %>%"
+"0","  as_tibble() %>%"
+"0","  group_by(city_state, holc_grade) %>%"
+"0","  summarize(total_pop          = sum(pop40_w),"
+"0","            wells_1km_preholc  = sum(wells_1km_all_preholc),"
+"0","            wells_1km_postholc = sum(wells_1km_all_postholc)) #%>%"
+"2","`summarise()` regrouping output by 'city_state' (override with `.groups` argument)
+"

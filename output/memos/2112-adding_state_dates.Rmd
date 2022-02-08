@@ -1,0 +1,68 @@
+---
+title: "Adding dates from states"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+source("../../code/0-setup/01-setup.R")
+```
+
+```{r data_input, include=FALSE}
+wells_sf <- readRDS("../../data/interim/wells_interim.rds") %>%
+  drop_na("longitude") %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = crs_nad83)
+pa_dates <- read_csv("../../data/interim/Spud_External_Data.csv")
+ca_dates <- read_csv("../../data/raw/cal_gem/doggr_all_wells_may2018.csv")
+wells_all_100m <- readRDS("../../data/interim/wells_all_100m.rds")
+```
+
+```{r data_prep, include=FALSE}
+# sets up wells datasets we already have
+wells_all <- wells_sf %>% 
+  filter(production_type == "OIL" | 
+           production_type == "GAS" |
+           production_type == "OIL & GAS" |
+           production_type == "INJECTION" |
+           production_type == "UNKNOWN") %>%
+  # need shortened API number to match with state-level datasets below
+  mutate(api_number_short = str_sub(api_number, -12, -5))
+
+# CA data
+ca_dates <- ca_dates %>%
+  filter(!is.na(SpudDate) & !is.na(CompDate)) %>%
+  mutate(api_number_short  = as.factor(API),
+         spud_date2        = as.Date(SpudDate, format = "%m/%d/%y"),
+         completion_date2  = as.Date(CompDate, format = "%m/%d/%y")) %>%
+  select(api_number_short, spud_date2, completion_date2)
+
+# PA data
+pa_dates <- pa_dates %>%
+  drop_na(SPUD_DATE) %>%
+  mutate(api_number_short  = as.factor(str_replace(API, "-", "")),
+         spud_date2        = as.Date(SPUD_DATE, format = "%m/%d/%y")) %>%
+  select(api_number_short, spud_date2)
+```
+
+```{r add_dates, echo=FALSE}
+# joins well dates 
+wells2 <- wells_all %>%
+  filter(state %in% c("CA", "PA")) %>%
+  left_join(ca_dates, by = "api_number_short")
+``` 
+
+Wells within 100 m of HOLC neighborhoods where we were able to add new dates:
+
+```{r echo=FALSE}
+wells3 <- wells2 %>%
+  as_tibble() %>% 
+  filter(is.na(spud_date) & is.na(completion_date) & 
+           is.na(first_prod_date) & is.na(last_prod_date)) %>%
+  filter(!is.na(spud_date2) | !is.na(completion_date2)) %>%
+  filter(api_number %in% wells_all_100m$api_number) %>%
+  select(api_number, state,
+         spud_date, spud_date2,
+         completion_date, completion_date2, 
+         first_prod_date, last_prod_date)
+```
+
+

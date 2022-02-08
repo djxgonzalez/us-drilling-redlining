@@ -1,0 +1,7 @@
+"0","holc_exposure <- holc_neighborhoods %>%
+  left_join(holc_buffer_1km_wells_all_preholc, by = neighborhood) %>%
+  left_join(holc_buffer_1km_wells_all_postholc, by = neighborhood)
+"
+"2","Error in standardise_join_by(by, x_names = x_names, y_names = y_names) : 
+  object 'neighborhood' not found
+"

@@ -1,0 +1,10 @@
+"0","holc_tmle_cd <- tmle(Y = log(holc_census_c_d$wells_100m_all),"
+"0","                     A = holc_census_c_d$treatment,"
+"0","                     W = holc_census_c_d[, c(""prop_score_cd"")],"
+"0","                     family = ""gaussian"")"
+"2","Error in (function (Y, X, newX = NULL, family = gaussian(), SL.library,  : 
+  missing data is currently not supported. Check Y, X, and newX for missing values
+"
+"2","Error in estimateQ(Y = stage1$Ystar, Z, A, W, Delta, Q = stage1$Q, Qbounds = stage1$Qbounds,  : 
+  Super Learner failed when estimating Q. Exiting program
+"

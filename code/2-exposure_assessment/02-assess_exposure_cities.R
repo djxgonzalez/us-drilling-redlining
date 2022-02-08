@@ -61,6 +61,7 @@ write_csv(holc_cities_buffer_10km_wells_all,
 
 #.........................................................................
 # counts wells within 3 km of boundary of HOLC cities
+
 holc_cities_buffer_3km_wells_all <- 
   tibble(city_state = "", buffer_3km_wells_all_n = as.numeric(NA))
 for(i in c(1:nrow(holc_cities))) {
@@ -91,11 +92,25 @@ for(i in c(1:nrow(holc_cities))) {
 write_csv(holc_cities_buffer_1km_wells_all,
           "data/interim/holc_cities_buffer_1km_wells_all.csv")
 
-
+#.........................................................................
+# counts wells within 100 m of boundary of HOLC cities
+holc_cities_buffer_100m_wells_all <- 
+  tibble(city_state = "", buffer_100m_wells_all_n = as.numeric(NA))
+for(i in c(1:nrow(holc_cities))) {
+  holc_cities_buffer_100m_wells_all[i, ] <- 
+    assessExposureBufferCount(data_geography = holc_cities[i, ],
+                              data_wells     = wells_sf,
+                              buffer_dist_m  = 100,
+                              exp_variable   = "buffer_100m_wells_all_n")
+  print(i)
+}
+# exports dataset
+write_csv(holc_cities_buffer_100m_wells_all,
+          "data/interim/holc_cities_buffer_100m_wells_all.csv")
 
 
 ##---------------------------------------------------------------------------
-## assesses exposure to wells in preproduciton or produciton before 1935
+## assesses exposure to wells in preproduction or produciton before 1935
 
 #.........................................................................
 # counts wells within 3 km of boundary of HOLC cities
@@ -131,7 +146,7 @@ write_csv(holc_cities_buffer_1km_wells_all_pre1935,
 
 
 ##---------------------------------------------------------------------------
-## assesses exposure to wells in preproduciton or produciton after 1935
+## assesses exposure to wells in preproduction or produciton after 1935
 
 #.........................................................................
 # counts wells within 3 km of boundary of HOLC cities

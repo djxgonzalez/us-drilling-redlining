@@ -1,0 +1,17 @@
+{
+    "path" : "~/Documents/Professional/research/projects active/us redlining drilling/us-drilling-redlining/data/interim",
+    "sortOrder" : [
+        {
+            "ascending" : true,
+            "columnIndex" : 2
+        },
+        {
+            "ascending" : true,
+            "columnIndex" : 4
+        },
+        {
+            "ascending" : false,
+            "columnIndex" : 3
+        }
+    ]
+}

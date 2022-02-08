@@ -1,0 +1,11 @@
+"0","neighborhoods_near_wells_3km <- holc_neighborhoods %>%
+  mutate(city_state = paste(city, ""-"", state)) %>%
+  filter(city_state %in% cities_near_wells_3km$city_state) %>%
+  select(neighborhood) %>%
+  mutate(area = st_area())
+"
+"2","Error: Problem with `mutate()` input `area`.
+[31mx[39m no applicable method for 'st_area' applied to an object of class ""NULL""
+[34mℹ[39m Input `area` is `st_area()`.
+[90mRun `rlang::last_error()` to see where the error occurred.[39m
+"

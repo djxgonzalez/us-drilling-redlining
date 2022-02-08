@@ -1,0 +1,33 @@
+"0","source(""../0-setup/01-setup.R"")"
+"0","#library(""tmle"")   # fxn for targeted maximum likelihood estimation"
+"0","#library(""dbarts"") # necessary for tmle"
+"0","library(""ltmle"")"
+"0","library(""SuperLearner"")"
+"2","Loading required package: nnls
+"
+"2","Loading required package: gam
+"
+"2","Loading required package: splines
+"
+"2","Loading required package: foreach
+"
+"2","
+Attaching package: ‘foreach’
+
+"
+"2","The following objects are masked from ‘package:purrr’:
+
+    accumulate, when
+
+"
+"2","Loaded gam 1.20
+
+"
+"2","Super Learner
+"
+"2","Version: 2.0-28
+"
+"2","Package created on 2021-05-04
+
+"
+"0","SL.library <- c(""SL.glm"",  ""SL.mean"", ""SL.bayesglm"", ""SL.earth"", ""SL.gam"")"

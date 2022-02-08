@@ -1,0 +1,7 @@
+"0","wells_within_buffer <- wells_pre1940_sf %>%"
+"0","  st_intersection(holc_census_cd)"
+"0","nrow(wells_within_buffer)"
+"1","[1]"
+"1"," 940"
+"1","
+"

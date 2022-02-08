@@ -1,0 +1,11 @@
+"0","holc_neighborhoods_exp %>%"
+"0","  filter(wells_0km_all_preholc > 0 | wells_0km_all_postholc > 0) %>%"
+"0","  filter(holc_grade %in% c(""A"", ""B"", ""C"", ""D"")) %>%"
+"0","  group_by(holc_grade) %>%"
+"0","  summarize(area_mean   = round(mean(area_sqkm), digits = 2),"
+"0","            area_median = round(median(area_sqkm), digits = 2),"
+"0","            area_sd     = round(sd(area_sqkm), digits = 2),"
+"0","            area_min    = round(min(area_sqkm), digits = 2),"
+"0","            area_max    = round(max(area_sqkm), digits = 2))"
+"2","`summarise()` ungrouping output (override with `.groups` argument)
+"

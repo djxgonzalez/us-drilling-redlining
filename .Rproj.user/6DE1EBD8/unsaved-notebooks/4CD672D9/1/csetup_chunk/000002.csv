@@ -1,0 +1,6 @@
+"0","# first set up the environment; we need the `tidyverse` and `sf` packages"
+"0","source(""../../code/0-setup/01-setup.R"")"
+"2","cannot open file '../../code/0-setup/01-setup.R': No such file or directory"
+"2","Error in file(filename, ""r"", encoding = encoding) : 
+  cannot open the connection
+"

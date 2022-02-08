@@ -1,0 +1,44 @@
+"0","p <- neighborhoods_near_wells_3km %>%"
+"2","Warning messages:
+"
+"2","1: "
+"2","In readChar(file, size, TRUE) :"
+"2"," truncating string with embedded nuls
+"
+"2","2: "
+"2","In readChar(file, size, TRUE) :"
+"2"," truncating string with embedded nuls
+"
+"2","3: "
+"2","In readChar(file, size, TRUE) :"
+"2"," truncating string with embedded nuls
+"
+"2","4: "
+"2","In readChar(file, size, TRUE) :"
+"2"," truncating string with embedded nuls
+"
+"2","5: "
+"2","In readChar(file, size, TRUE) :"
+"2"," truncating string with embedded nuls
+"
+"2","6: "
+"2","In readChar(file, size, TRUE) :"
+"2"," truncating string with embedded nuls
+"
+"2","7: "
+"2","In readChar(file, size, TRUE) :"
+"2"," truncating string with embedded nuls
+"
+"2","8: "
+"2","In readChar(file, size, TRUE) :"
+"2"," truncating string with embedded nuls
+"
+"0","  drop_na(holc_grade) %>%"
+"0","  ggplot(aes(holc_grade, area_msquared)) +"
+"0","  geom_boxplot(outlier.shape = NA) +"
+"0","  ylim(0, 4000000) +"
+"0","  labs(x = ""HOLC grade"", y = ""Neighborhood area (m^2)"") +"
+"0","  facet_wrap(. ~ city_state) +"
+"0","  coord_flip() +"
+"0","  theme_classic()"
+"0","  p"

@@ -1,0 +1,6 @@
+"0","wells_all_0m <- wells_all_100m %>% 
+  st_intersection(holc_buffer_0m)
+"
+"2","although coordinates are longitude/latitude, st_intersection assumes that they are planar
+"
+"2","attribute variables are assumed to be spatially constant throughout all geometries"

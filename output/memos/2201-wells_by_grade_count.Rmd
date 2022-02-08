@@ -1,0 +1,163 @@
+---
+title: "Memo - Count of wells by grade"
+output:
+  html_document:
+    theme: flatly
+    highlight: haddock 
+    toc: yes
+    tocdepth: 3
+    toc_float: yes
+    keep_md: true
+    number_sections: true
+---
+
+
+For descriptive stats and Figure S2
+
+```{r include=FALSE, setup}
+source("../../code/0-setup/01-setup.R")
+```
+
+```{r include=FALSE, data_input}
+holc_neighborhoods_exp <- 
+  readRDS("../../data/processed/holc_neighborhoods_exp.rds")
+holc_neighborhoods_sf <- 
+  st_read("../../data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp") %>%
+  st_transform(crs_nad83) %>%
+  mutate(neighborhood = as.factor(neighborho)) %>%
+  st_transform(crs_projected) %>%
+  st_buffer(dist = 0) %>%
+  st_transform(crs_nad83)
+holc_propensity_ab <- readRDS("../../data/processed/propensity_scores_ab.rds")
+holc_propensity_bc <- readRDS("../../data/processed/propensity_scores_bc.rds")
+holc_propensity_cd <- readRDS("../../data/processed/propensity_scores_cd.rds")
+wells_interim <- readRDS("../../data/interim/wells_interim.rds")
+wells_all_100m <- readRDS("../../data/interim/wells_all_100m.rds") %>%
+  st_transform(crs_nad83)
+```
+
+```{r include=FALSE, data_prep}
+holc_neighborhoods_census <- holc_neighborhoods_exp %>%
+  filter(has_census_data == 1)
+holc_census <- holc_neighborhoods_sf %>%
+  filter(neighborhood %in% holc_neighborhoods_census$neighborhood) %>%
+  st_union() %>% 
+  st_transform(crs_projected) %>%
+  st_buffer(dist = 100) %>%
+  st_transform(crs_nad83)
+holc_census_ab <- holc_neighborhoods_sf %>%
+  filter(neighborhood %in% holc_propensity_ab$neighborhood) %>%
+  st_union() %>% 
+  st_transform(crs_projected) %>%
+  st_buffer(dist = 100) %>%
+  st_transform(crs_nad83)
+holc_census_bc <- holc_neighborhoods_sf %>%
+  filter(neighborhood %in% holc_propensity_bc$neighborhood) %>%
+  st_union() %>% 
+  st_transform(crs_projected) %>%
+  st_buffer(dist = 100) %>%
+  st_transform(crs_nad83)
+holc_census_cd <- holc_neighborhoods_sf %>%
+  filter(neighborhood %in% holc_propensity_cd$neighborhood) %>%
+  st_union() %>% 
+  st_transform(crs_projected) %>%
+  st_buffer(dist = 100) %>%
+  st_transform(crs_nad83)
+
+wells_post1935_sf <- wells_all_100m %>%
+  filter(spud_date >= as.Date("1935-01-01") |  # post-appraisal date for all cities
+           completion_date >= as.Date("1935-01-01") |
+           first_prod_date >= as.Date("1935-01-01") |
+           last_prod_date  >= as.Date("1935-01-01")) %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = crs_nad83)
+wells_pre1940_sf <- wells_all_100m %>%
+  filter(spud_date <= as.Date("1940-12-31") |  # latest possible date for this
+           completion_date <= as.Date("1940-12-31") |
+           first_prod_date <= as.Date("1940-12-31") |
+           last_prod_date  <= as.Date("1940-12-31")) %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = crs_nad83)
+```
+
+
+## All wells
+
+For wells with and without production dates
+
+**A-B**
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+wells_within_buffer <- wells_all_100m %>%
+  st_intersection(holc_census_ab)
+nrow(wells_within_buffer)
+```
+
+**B-C**
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+wells_within_buffer <- wells_all_100m %>%
+  st_intersection(holc_census_bc)
+nrow(wells_within_buffer)
+```
+
+**C-D**
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+wells_within_buffer <- wells_all_100m %>%
+  st_intersection(holc_census_cd)
+nrow(wells_within_buffer)
+```
+
+
+## Pre-1940 wells
+
+**A-B**
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+wells_within_buffer <- wells_pre1940_sf %>%
+  st_intersection(holc_census_ab)
+nrow(wells_within_buffer)
+```
+
+**B-C**
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+wells_within_buffer <- wells_pre1940_sf %>%
+  st_intersection(holc_census_bc)
+nrow(wells_within_buffer)
+```
+
+**C-D**
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+wells_within_buffer <- wells_pre1940_sf %>%
+  st_intersection(holc_census_cd)
+nrow(wells_within_buffer)
+```
+
+
+## Post-HOLC wells
+
+**A-B**
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+wells_within_buffer <- wells_post1935_sf %>%
+  st_intersection(holc_census_ab)
+nrow(wells_within_buffer)
+```
+
+**B-C**
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+wells_within_buffer <- wells_post1935_sf %>%
+  st_intersection(holc_census_bc)
+nrow(wells_within_buffer)
+```
+
+**C-D**
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+wells_within_buffer <- wells_post1935_sf %>%
+  st_intersection(holc_census_cd)
+nrow(wells_within_buffer)
+```
+

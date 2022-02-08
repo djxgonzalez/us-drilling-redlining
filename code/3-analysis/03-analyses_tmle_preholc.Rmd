@@ -1,0 +1,454 @@
+---
+title: "Analyses - TMLE fit to propensity-score matched data"
+subtitle: "Well Density"
+output:
+  html_document:
+    theme: flatly
+    highlight: haddock 
+    toc: yes
+    tocdepth: 3
+    toc_float: yes
+    keep_md: true
+    number_sections: false
+---
+
+```{r include=FALSE, setup}
+source("../0-setup/01-setup.R")
+#library("tmle")   # fxn for targeted maximum likelihood estimation
+#library("dbarts") # necessary for tmle
+library("ltmle")
+library("SuperLearner")
+SL.library <- c("SL.glm",  "SL.mean", "SL.bayesglm", "SL.earth", "SL.gam")
+```
+
+
+```{r include=FALSE, data_input}
+holc_neighborhoods_exp <- 
+  readRDS("../../data/processed/holc_neighborhoods_exp.rds")
+
+holc_matched_ab_0m <- 
+  readRDS("../../data/processed/propensity_scores_ab.rds")
+holc_matched_bc_0m <- 
+  readRDS("../../data/processed/propensity_scores_bc.rds")
+holc_matched_cd_0m <- 
+  readRDS("../../data/processed/propensity_scores_cd.rds")
+
+holc_matched_ab_100m <- 
+  readRDS("../../data/processed/propensity_scores_ab.rds")
+holc_matched_bc_100m <- 
+  readRDS("../../data/processed/propensity_scores_bc.rds")
+holc_matched_cd_100m <- 
+  readRDS("../../data/processed/propensity_scores_cd.rds")
+```
+
+```{r include=FALSE, data_prep}
+# gets exposure variables to join with matched dataset -----------------------
+
+# adds list of covariates
+covars_list <- c("median_home_value",
+                 "prop_nonwhite",
+                 "prop_black",
+                 "prop_foreign",
+                 "prop_high_school",
+                 "prop_employed",
+                 "prop_no_radio",
+                 "prop_home_repair",
+                 "n_people_unit",
+                 "pop_density")
+
+# 0 m buffer
+vars_exposure_ab_0m <- holc_neighborhoods_exp %>%
+  select(neighborhood, area_sqkm,
+         wells_0km_all, wells_0km_all_preholc, wells_0km_all_postholc) %>%
+  filter(neighborhood %in% holc_matched_ab_0m$neighborhood) %>%
+  mutate(wells_0m_all                  = wells_0km_all,
+         wells_0m_all_density          = (wells_0km_all / area_sqkm),
+         wells_0m_all_preholc          = wells_0km_all_preholc,
+         wells_0m_all_preholc_density  = (wells_0km_all_preholc / area_sqkm),
+         wells_0m_all_postholc         = wells_0km_all_postholc,
+         wells_0m_all_postholc_density = (wells_0km_all_postholc / area_sqkm))
+vars_exposure_bc_0m <- holc_neighborhoods_exp %>%
+  select(neighborhood, area_sqkm,
+         wells_0km_all, wells_0km_all_preholc, wells_0km_all_postholc) %>%
+  filter(neighborhood %in% holc_matched_bc_0m$neighborhood) %>%
+  mutate(wells_0m_all                  = wells_0km_all,
+         wells_0m_all_density          = (wells_0km_all / area_sqkm),
+         wells_0m_all_preholc          = wells_0km_all_preholc,
+         wells_0m_all_preholc_density  = (wells_0km_all_preholc / area_sqkm),
+         wells_0m_all_postholc         = wells_0km_all_postholc,
+         wells_0m_all_postholc_density = (wells_0km_all_postholc / area_sqkm))
+vars_exposure_cd_0m <- holc_neighborhoods_exp %>%
+  select(neighborhood, area_sqkm,
+         wells_0km_all, wells_0km_all_preholc, wells_0km_all_postholc) %>%
+  filter(neighborhood %in% holc_matched_cd_0m$neighborhood) %>%
+  mutate(wells_0m_all                  = wells_0km_all,
+         wells_0m_all_density          = (wells_0km_all / area_sqkm),
+         wells_0m_all_preholc          = wells_0km_all_preholc,
+         wells_0m_all_preholc_density  = (wells_0km_all_preholc / area_sqkm),
+         wells_0m_all_postholc         = wells_0km_all_postholc,
+         wells_0m_all_postholc_density = (wells_0km_all_postholc / area_sqkm))
+
+# 100 m buffer
+vars_exposure_ab_100m <- holc_neighborhoods_exp %>%
+  select(neighborhood, area_sqkm,
+         wells_100m_all, wells_100m_all_preholc, wells_100m_all_postholc) %>%
+  filter(neighborhood %in% holc_matched_ab_100m$neighborhood) %>%
+  mutate(wells_100m_all_density          = (wells_100m_all / area_sqkm),
+         wells_100m_all_preholc_density  = (wells_100m_all_preholc / area_sqkm),
+         wells_100m_all_postholc_density = (wells_100m_all_postholc / area_sqkm))
+vars_exposure_bc_100m <- holc_neighborhoods_exp %>%
+  select(neighborhood, area_sqkm,
+         wells_100m_all, wells_100m_all_preholc, wells_100m_all_postholc) %>%
+  filter(neighborhood %in% holc_matched_bc_100m$neighborhood) %>%
+  mutate(wells_100m_all_density          = (wells_100m_all / area_sqkm),
+         wells_100m_all_preholc_density  = (wells_100m_all_preholc / area_sqkm),
+         wells_100m_all_postholc_density = (wells_100m_all_postholc / area_sqkm))
+vars_exposure_cd_100m <- holc_neighborhoods_exp %>%
+  select(neighborhood, area_sqkm,
+         wells_100m_all, wells_100m_all_preholc, wells_100m_all_postholc) %>%
+  filter(neighborhood %in% holc_matched_cd_100m$neighborhood) %>%
+  mutate(wells_100m_all_density          = (wells_100m_all / area_sqkm),
+         wells_100m_all_preholc_density  = (wells_100m_all_preholc / area_sqkm),
+         wells_100m_all_postholc_density = (wells_100m_all_postholc / area_sqkm))
+
+# joins covariates and adds treatment indicator ------------------------------
+
+# 0k m
+holc_matched_ab_0m <- holc_matched_ab_0m %>%
+  left_join(vars_exposure_ab_0m, by = "neighborhood") %>%
+  mutate(treatment = case_when(holc_grade == "B" ~ 1,
+                               holc_grade == "A" ~ 0))
+holc_matched_bc_0m <- holc_matched_bc_0m %>%
+  left_join(vars_exposure_bc_0m, by = "neighborhood") %>%
+  mutate(treatment = case_when(holc_grade == "C" ~ 1,
+                               holc_grade == "B" ~ 0))
+holc_matched_cd_0m <- holc_matched_cd_0m %>%
+  left_join(vars_exposure_cd_0m, by = "neighborhood") %>%
+  mutate(treatment = case_when(holc_grade == "D" ~ 1,
+                               holc_grade == "C" ~ 0))
+
+# 100 m
+holc_matched_ab_100m <- holc_matched_ab_100m %>%
+  left_join(vars_exposure_ab_100m, by = "neighborhood") %>%
+  mutate(treatment = case_when(holc_grade == "B" ~ 1,
+                               holc_grade == "A" ~ 0))
+holc_matched_bc_100m <- holc_matched_bc_100m %>%
+  left_join(vars_exposure_bc_100m, by = "neighborhood") %>%
+  mutate(treatment = case_when(holc_grade == "C" ~ 1,
+                               holc_grade == "B" ~ 0))
+holc_matched_cd_100m <- holc_matched_cd_100m %>%
+  left_join(vars_exposure_cd_100m, by = "neighborhood") %>%
+  mutate(treatment = case_when(holc_grade == "D" ~ 1,
+                               holc_grade == "C" ~ 0))
+
+# 1 km
+# holc_matched_ab_1km <- holc_matched_ab_1km %>%
+#   left_join(vars_exposure_ab_1km, by = "neighborhood") %>%
+#   mutate(treatment = case_when(holc_grade == "B" ~ 1,
+#                                holc_grade == "A" ~ 0))
+# holc_matched_bc_1km <- holc_matched_bc_1km %>%
+#   left_join(vars_exposure_bc_1km, by = "neighborhood") %>%
+#   mutate(treatment = case_when(holc_grade == "C" ~ 1,
+#                                holc_grade == "B" ~ 0))
+# holc_matched_cd_1km <- holc_matched_cd_1km %>%
+#   left_join(vars_exposure_cd_1km, by = "neighborhood") %>%
+#   mutate(treatment = case_when(holc_grade == "D" ~ 1,
+#                                holc_grade == "C" ~ 0))
+```
+
+
+# A-B neighborhoods
+
+## 0 m exposure
+
+**Count**
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# creates dataset for ltmle function call
+data_tmle = holc_matched_ab_0m[, c(covars_list, 
+                                   "wells_0km_all_preholc",
+                                   "treatment")]
+# sets array and dim using propensity scores (cpa)
+gform = array(c(holc_matched_ab_0m$cpa1,
+                1 - holc_matched_ab_0m$cpa1),
+              dim = c(length(holc_matched_ab_0m$cpa1), 1, 2))
+# fits model
+model_ab_0m_all_preholc = ltmle(data   = data_tmle,
+                                Anodes = "treatment",
+                                Lnodes = NULL,
+                                Ynodes = "wells_0km_all_preholc",  #_density
+                                gform  = gform,
+                                abar   = list(1, 0),
+                                SL.library          = SL.library,
+                                observation.weights = holc_matched_ab_0m$weights)
+summary(model_ab_0m_all_preholc)
+```
+
+**Density**
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# creates dataset for ltmle function call
+data_tmle = holc_matched_ab_0m[, c(covars_list, 
+                                   "wells_0m_all_preholc_density",
+                                   "treatment")]
+# sets array and dim using propensity scores (cpa)
+gform = array(c(holc_matched_ab_0m$cpa1,
+                1 - holc_matched_ab_0m$cpa1),
+              dim = c(length(holc_matched_ab_0m$cpa1), 1, 2))
+# fits model
+model_ab_0m_all_preholc = ltmle(data   = data_tmle,
+                                Anodes = "treatment",
+                                Lnodes = NULL,
+                                Ynodes = "wells_0m_all_preholc_density",
+                                gform  = gform,
+                                abar   = list(1, 0),
+                                SL.library          = SL.library,
+                                observation.weights = holc_matched_ab_0m$weights)
+summary(model_ab_0m_all_preholc)
+```
+
+## 100 m exposure
+
+**Count**
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# creates dataset for ltmle function call
+data_tmle = holc_matched_ab_100m[, c(covars_list, 
+                                     "wells_100m_all_preholc",
+                                     "treatment")]
+# sets array and dim using propensity scores (cpa)
+gform = array(c(holc_matched_ab_100m$cpa1,
+                1 - holc_matched_ab_100m$cpa1),
+              dim = c(length(holc_matched_ab_100m$cpa1), 1, 2))
+# fits model
+model_ab_100m_all_preholc = ltmle(data   = data_tmle,
+                                  Anodes = "treatment",
+                                  Lnodes = NULL,
+                                  Ynodes = "wells_100m_all_preholc",  #_density
+                                  gform  = gform,
+                                  abar   = list(1, 0),
+                                  SL.library          = SL.library,
+                                  observation.weights = holc_matched_ab_100m$weights)
+summary(model_ab_100m_all_preholc)
+```
+
+**Density**
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# creates dataset for ltmle function call
+data_tmle = holc_matched_ab_100m[, c(covars_list, 
+                                     "wells_100m_all_preholc_density",
+                                     "treatment")]
+# sets array and dim using propensity scores (cpa)
+gform = array(c(holc_matched_ab_100m$cpa1,
+                1 - holc_matched_ab_100m$cpa1),
+              dim = c(length(holc_matched_ab_100m$cpa1), 1, 2))
+# fits model
+model_ab_100m_all_preholc = ltmle(data   = data_tmle,
+                                  Anodes = "treatment",
+                                  Lnodes = NULL,
+                                  Ynodes = "wells_100m_all_preholc_density",
+                                  gform  = gform,
+                                  abar   = list(1, 0),
+                                  SL.library          = SL.library,
+                                  observation.weights = holc_matched_ab_100m$weights)
+summary(model_ab_100m_all_preholc)
+```
+
+
+# B-C neighborhoods
+
+## 0 m exposure
+
+**Count**
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# creates dataset for ltmle function call
+data_tmle = holc_matched_bc_0m[, c(covars_list, 
+                                   "wells_0m_all_preholc",
+                                   "treatment")]
+# sets array and dim using propensity scores (cpa)
+gform = array(c(holc_matched_bc_0m$cpa1,
+                1 - holc_matched_bc_0m$cpa1),
+              dim = c(length(holc_matched_bc_0m$cpa1), 1, 2))
+# fits model
+model_bc_0m_all_preholc = ltmle(data   = data_tmle,
+                                Anodes = "treatment",
+                                Lnodes = NULL,
+                                Ynodes = "wells_0m_all_preholc",  #_density
+                                gform  = gform,
+                                abar   = list(1, 0),
+                                SL.library          = SL.library,
+                                observation.weights = holc_matched_bc_0m$weights)
+summary(model_bc_0m_all_preholc)
+```
+
+**Density**
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# creates dataset for ltmle function call
+data_tmle = holc_matched_bc_0m[, c(covars_list, 
+                                   "wells_0m_all_preholc_density",
+                                   "treatment")]
+# sets array and dim using propensity scores (cpa)
+gform = array(c(holc_matched_bc_0m$cpa1,
+                1 - holc_matched_bc_0m$cpa1),
+              dim = c(length(holc_matched_bc_0m$cpa1), 1, 2))
+# fits model
+model_bc_0m_all_preholc = ltmle(data   = data_tmle,
+                                Anodes = "treatment",
+                                Lnodes = NULL,
+                                Ynodes = "wells_0m_all_preholc_density",
+                                gform  = gform,
+                                abar   = list(1, 0),
+                                SL.library          = SL.library,
+                                observation.weights = holc_matched_bc_0m$weights)
+summary(model_bc_0m_all_preholc)
+```
+
+## 100 m exposure
+
+**Count**
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# creates dataset for ltmle function call
+data_tmle = holc_matched_bc_100m[, c(covars_list, 
+                                     "wells_100m_all_preholc",
+                                     "treatment")]
+# sets array and dim using propensity scores (cpa)
+gform = array(c(holc_matched_bc_100m$cpa1,
+                1 - holc_matched_bc_100m$cpa1),
+              dim = c(length(holc_matched_bc_100m$cpa1), 1, 2))
+# fits model
+model_bc_100m_all_preholc = ltmle(data   = data_tmle,
+                                  Anodes = "treatment",
+                                  Lnodes = NULL,
+                                  Ynodes = "wells_100m_all_preholc",  #_density
+                                  gform  = gform,
+                                  abar   = list(1, 0),
+                                  SL.library          = SL.library,
+                                  observation.weights = holc_matched_bc_100m$weights)
+summary(model_bc_100m_all_preholc)
+```
+
+**Density**
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# creates dataset for ltmle function call
+data_tmle = holc_matched_bc_100m[, c(covars_list, 
+                                     "wells_100m_all_preholc_density",
+                                     "treatment")]
+# sets array and dim using propensity scores (cpa)
+gform = array(c(holc_matched_bc_100m$cpa1,
+                1 - holc_matched_bc_100m$cpa1),
+              dim = c(length(holc_matched_bc_100m$cpa1), 1, 2))
+# fits model
+model_bc_100m_all_preholc = ltmle(data   = data_tmle,
+                                  Anodes = "treatment",
+                                  Lnodes = NULL,
+                                  Ynodes = "wells_100m_all_preholc_density",
+                                  gform  = gform,
+                                  abar   = list(1, 0),
+                                  SL.library          = SL.library,
+                                  observation.weights = holc_matched_bc_100m$weights)
+summary(model_bc_100m_all_preholc)
+```
+
+
+# C-D neighborhoods
+
+## 0 m exposure
+
+**Count**
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# creates dataset for ltmle function call
+data_tmle = holc_matched_cd_0m[, c(covars_list, 
+                                   "wells_0m_all_preholc",
+                                   "treatment")]
+# sets array and dim using propensity scores (cpa)
+gform = array(c(holc_matched_cd_0m$cpa1,
+                1 - holc_matched_cd_0m$cpa1),
+              dim = c(length(holc_matched_cd_0m$cpa1), 1, 2))
+# fits model
+model_cd_0m_all_preholc = ltmle(data   = data_tmle,
+                                Anodes = "treatment",
+                                Lnodes = NULL,
+                                Ynodes = "wells_0m_all_preholc",  #_density
+                                gform  = gform,
+                                abar   = list(1, 0),
+                                SL.library          = SL.library,
+                                observation.weights = holc_matched_cd_0m$weights)
+summary(model_cd_0m_all_preholc)
+```
+
+**Density**
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# creates dataset for ltmle function call
+data_tmle = holc_matched_cd_0m[, c(covars_list, 
+                                   "wells_0m_all_preholc_density",
+                                   "treatment")]
+# sets array and dim using propensity scores (cpa)
+gform = array(c(holc_matched_cd_0m$cpa1,
+                1 - holc_matched_cd_0m$cpa1),
+              dim = c(length(holc_matched_cd_0m$cpa1), 1, 2))
+# fits model
+model_cd_0m_all_preholc = ltmle(data   = data_tmle,
+                                Anodes = "treatment",
+                                Lnodes = NULL,
+                                Ynodes = "wells_0m_all_preholc_density",
+                                gform  = gform,
+                                abar   = list(1, 0),
+                                SL.library          = SL.library,
+                                observation.weights = holc_matched_cd_0m$weights)
+summary(model_cd_0m_all_preholc)
+```
+
+## 100 m exposure
+
+**Count**
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# creates dataset for ltmle function call
+data_tmle = holc_matched_cd_100m[, c(covars_list, 
+                                     "wells_100m_all_preholc",
+                                     "treatment")]
+# sets array and dim using propensity scores (cpa)
+gform = array(c(holc_matched_cd_100m$cpa1,
+                1 - holc_matched_cd_100m$cpa1),
+              dim = c(length(holc_matched_cd_100m$cpa1), 1, 2))
+# fits model
+model_cd_100m_all_preholc = ltmle(data   = data_tmle,
+                                  Anodes = "treatment",
+                                  Lnodes = NULL,
+                                  Ynodes = "wells_100m_all_preholc",  #_density
+                                  gform  = gform,
+                                  abar   = list(1, 0),
+                                  SL.library          = SL.library,
+                                  observation.weights = holc_matched_cd_100m$weights)
+summary(model_cd_100m_all_preholc)
+```
+
+**Density**
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+# creates dataset for ltmle function call
+data_tmle = holc_matched_cd_100m[, c(covars_list, 
+                                     "wells_100m_all_preholc_density",
+                                     "treatment")]
+# sets array and dim using propensity scores (cpa)
+gform = array(c(holc_matched_cd_100m$cpa1,
+                1 - holc_matched_cd_100m$cpa1),
+              dim = c(length(holc_matched_cd_100m$cpa1), 1, 2))
+# fits model
+model_cd_100m_all_preholc = ltmle(data   = data_tmle,
+                                  Anodes = "treatment",
+                                  Lnodes = NULL,
+                                  Ynodes = "wells_100m_all_preholc_density",
+                                  gform  = gform,
+                                  abar   = list(1, 0),
+                                  SL.library          = SL.library,
+                                  observation.weights = holc_matched_cd_100m$weights)
+summary(model_cd_100m_all_preholc)
+```

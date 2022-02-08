@@ -1,0 +1,5 @@
+"0","holc_neighborhoods_exp2 <- holc_neighborhoods_exp %>%"
+"0","  left_join(holc_neighborhoods_centroids) %>%"
+"0","  drop_na(fbw40_w)"
+"2","Joining, by = c(""state"", ""city"", ""name"", ""holc_id"", ""holc_grade"", ""area_descr"", ""int_prop"", ""pop40_w"", ""white40_w"", ""nw40_w"", ""ppu40_w"", ""mhv40_w"", ""nr40_w"", ""mr40_w"", ""NA40_w"", ""b40_w"", ""Emp40_w"", ""Radio40_w"", ""NoRadio40_"", ""URRadio40_"", ""school_hsc"", ""school_uni"", ""school_uni.1"", ""fbw40_w"", ""usocc40_w"", ""own_occ40_"")
+"

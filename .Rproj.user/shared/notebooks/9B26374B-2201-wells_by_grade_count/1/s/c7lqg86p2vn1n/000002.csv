@@ -1,0 +1,7 @@
+"0","wells_within_buffer <- wells_all_100m %>%"
+"0","  st_intersection(holc_census_bc)"
+"0","nrow(wells_within_buffer)"
+"1","[1]"
+"1"," 1781"
+"1","
+"

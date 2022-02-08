@@ -1,0 +1,61 @@
+---
+title: "Memo - Explore US EIA plays geospatial data"
+output:
+   html_notebook:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+# first set up the environment; we need the `tidyverse` and `sf` packages
+source("../../code/0-setup/01-setup.R")
+```
+
+
+## Purpose
+
+For assessments of post-HOLC appraisal siting of oil/gas wells, we're interested in neighborhoods that could have plausibly been exposed to oil/gas wells. We can determine this by presence of oil fields/plays. This memo examines geospatial data from US Energy Information Agency (EIA) on location of oil plays; interested in seeing if these are fine enough spatial scale or if we should look for oil fields data.
+
+
+We'll explore this in Los Angeles as an example city.
+
+```{r data_input, include=FALSE}
+shale_plays <- 
+  st_read("../../data/raw/us_eia/TightOil_ShaleGas_Plays_Lower48_EIA/ShalePlays_US_EIA_Sep2019.shp") %>%
+  st_transform(crs_nad83)
+holc_la <- 
+  st_read("../../data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp") %>%
+  filter(city == "Los Angeles") %>%
+  st_transform(crs_nad83)
+la_county <- st_read("../../data/raw/la_county/Census_Tracts_2010.shp") %>%
+  st_transform(crs_nad83) %>%
+  st_union()
+tracts_1940_la <- 
+  st_read("../../data/raw/ipums/nhgis0001_shapefile_tl2008_us_tract_1940/US_tract_1940_conflated.shp") %>%
+  st_transform(crs_nad83) %>%
+  st_intersection(la_county)
+wells_la <- readRDS("../../data/interim/wells_interim.rds") %>%
+  filter(county_parish == "LOS ANGELES (CA)") %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = crs_nad83)
+plays_la <- shale_plays %>%
+  st_intersection(la_county)
+```
+
+
+## Figure. Oil play and HOLC neighborhoods in Los Angeles
+
+In Los Angeles, we're able to differentiate HOLC neighborhoods that were and weren't over oil play. Need to confirm this for other cities, too. We'll do this for the top 10 cities.
+
+```{r echo=FALSE}
+ggplot() +
+  geom_sf(data = plays_la, fill = "orange", color = NA, alpha = 0.5) +
+  geom_sf(data = wells_la, shape = 3, size = 2, alpha = 0.1) +
+  geom_sf(data = holc_la, fill = NA) +
+  xlim(-118.8, -117.6) + ylim(33.6, 34.6) +
+  theme_bw()
+```
+
+
+## Takeaways
+
+- Seems to work; need to check other cities

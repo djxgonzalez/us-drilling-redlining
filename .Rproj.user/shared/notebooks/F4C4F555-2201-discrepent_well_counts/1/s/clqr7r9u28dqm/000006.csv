@@ -1,0 +1,7 @@
+"0","d %>% select(city_state, neighborhood, wells_100m_all, wells_100m_all_preholc,
+             wells_100m_all_postholc) %>% nrow()
+"
+"1","[1]"
+"1"," 34"
+"1","
+"

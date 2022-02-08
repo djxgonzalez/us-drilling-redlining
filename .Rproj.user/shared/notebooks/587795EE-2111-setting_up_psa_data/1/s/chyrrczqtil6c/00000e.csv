@@ -1,0 +1,29 @@
+"0","holc_census_1940 <- 
+  st_read(""../../data/interim/propensity score data/holc_census_1940.shp"") %>%
+  st_transform(crs_nad83) %>%
+  st_centroid()
+"
+"1","Reading layer `"
+"1","holc_census_1940"
+"1","' from data source `"
+"1","/Users/davidgonzalez/Documents/Professional/research/projects active/us redlining drilling/us-drilling-redlining/data/interim/propensity score data/holc_census_1940.shp"
+"1","' using driver `"
+"1","ESRI Shapefile"
+"1","'"
+"1","
+"
+"1","Simple feature collection with 8102 features and 28 fields"
+"1","
+"
+"1","geometry type:  MULTIPOLYGON
+"
+"1","dimension:      XY
+"
+"1","bbox:           "
+"1","xmin: -122.7675 ymin: 25.70537 xmax: -70.9492 ymax: 47.72251"
+"1","
+"
+"1","CRS:            4326
+"
+"2","st_centroid assumes attributes are constant over geometries of x"
+"2","st_centroid does not give correct centroids for longitude/latitude data"

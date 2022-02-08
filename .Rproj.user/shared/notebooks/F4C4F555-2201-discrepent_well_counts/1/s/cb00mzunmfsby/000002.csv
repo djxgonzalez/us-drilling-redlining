@@ -1,0 +1,9 @@
+"0","holc_neighborhoods_exp %>% 
+  mutate(wells_pre_post = wells_100m_all_preholc + wells_100m_all_postholc) %>%
+  filter(wells_pre_post > wells_100m_all) %>%
+  nrow()
+"
+"1","[1]"
+"1"," 68"
+"1","
+"

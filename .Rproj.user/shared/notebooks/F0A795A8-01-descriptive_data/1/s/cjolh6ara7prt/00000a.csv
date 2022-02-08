@@ -1,0 +1,9 @@
+"0","holc_neighborhoods_exp %>%"
+"0","  mutate(wells_0km_no_dates = wells_0km_all - "
+"0","           (wells_0km_all_preholc + wells_0km_all_postholc)) %>%"
+"0","  group_by(holc_grade) %>%"
+"0","  summarize(n_wells_no_dates = sum(wells_0km_no_dates)) %>%"
+"0","  mutate(perc_no_wells = round(100 * (n_wells_no_dates / 5403), digits = 1)) %>%"
+"0","  filter(n_wells_no_dates > 0)"
+"2","`summarise()` ungrouping output (override with `.groups` argument)
+"

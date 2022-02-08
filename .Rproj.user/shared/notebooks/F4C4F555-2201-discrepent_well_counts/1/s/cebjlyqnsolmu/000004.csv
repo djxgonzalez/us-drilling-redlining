@@ -1,0 +1,8 @@
+"0","holc_neighborhoods_exp %>% "
+"0","  mutate(wells_pre_post = wells_100m_unknown_preholc + wells_100m_unknown_postholc) %>%"
+"0","  ggplot() +"
+"0","  geom_point(aes(wells_100m_unknown, wells_pre_post)) +"
+"0","  geom_abline(slope = 1, intercept = 0) + "
+"0","  xlim(0, 30) +"
+"0","  ylim(0, 30) +"
+"0","  theme_classic()"

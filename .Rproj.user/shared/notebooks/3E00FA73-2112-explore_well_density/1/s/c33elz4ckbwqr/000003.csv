@@ -1,0 +1,5 @@
+"0","holc_neighborhoods_exp <- holc_neighborhoods_exp %>%"
+"0","  mutate(wells_100m_density_pre  = (wells_100m_all_preholc / area_sqkm),"
+"0","         wells_100m_density_post = (wells_100m_all_postholc / area_sqkm)) %>%"
+"0","  mutate(wells_change = (wells_100m_all_postholc - wells_100m_all_preholc),"
+"0","         density_change = (wells_100m_density_post - wells_100m_density_pre))"

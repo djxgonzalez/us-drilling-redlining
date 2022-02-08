@@ -1,0 +1,387 @@
+---
+title: "Analyses - Descriptive Propensity"
+output:
+  html_document:
+    theme: flatly
+    highlight: haddock 
+    toc: yes
+    tocdepth: 3
+    toc_float: yes
+    keep_md: true
+    number_sections: true
+---
+
+```{r include=FALSE, setup}
+source("../0-setup/01-setup.R")
+library("tmle")  # fxn for targeted maximum likelihood estimation
+library("dbarts")
+```
+
+```{r include=FALSE, data_input}
+holc_neighborhoods_exp <- 
+  readRDS("../../data/processed/holc_neighborhoods_exp.rds")
+
+# import propensity_scores_cd.Rdata from data/interim/
+```
+
+```{r include=FALSE, data_prep}
+holc_exp <- holc_neighborhoods_exp %>%
+  filter(city_wells_1km_all >= 10)
+holc_census <- holc_exp %>%
+  drop_na(pop40_w) %>%
+  filter(pop40_w > 0)
+
+# exp vars to join with matched dataset
+holc_exp_vars_bc <- holc_neighborhoods_exp %>%
+  select(neighborhood, 
+         wells_100m_all, wells_100m_all_preholc, wells_100m_all_postholc,
+         wells_1km_all,  wells_1km_all_preholc,  wells_1km_all_postholc) %>%
+  filter(neighborhood %in% propensity_scores_bc$neighborhood)
+holc_exp_vars_cd <- holc_neighborhoods_exp %>%
+  select(neighborhood, 
+         wells_100m_all, wells_100m_all_preholc, wells_100m_all_postholc,
+         wells_1km_all,  wells_1km_all_preholc,  wells_1km_all_postholc) %>%
+  filter(neighborhood %in% propensity_scores_cd$neighborhood)
+
+propensity_scores_bc <- propensity_scores_bc %>%
+  left_join(holc_exp_vars_bc, by = "neighborhood") %>%
+  mutate(treatment = case_when(holc_grade == "C" ~ 1,
+                               holc_grade == "B" ~ 0))
+propensity_scores_cd <- propensity_scores_cd %>%
+  left_join(holc_exp_vars_cd, by = "neighborhood") %>%
+  mutate(treatment = case_when(holc_grade == "D" ~ 1,
+                               holc_grade == "C" ~ 0))
+
+```
+
+
+# B-C
+
+## 100 m exposure
+
+```{r include=FALSE}
+##### remove this once we have revised dataset:
+propensity_scores_bc_100m <- propensity_scores_bc %>%
+  filter(neighborhood %in% holc_exp$neighborhood)
+```
+
+```{r echo=FALSE}
+model_bc_100m_all <- tmle(Y = propensity_scores_bc_100m$wells_100m_all,
+                          A = propensity_scores_bc_100m$treatment,
+                          W = propensity_scores_bc_100m[, c("Score")],
+                          family = "gaussian")
+
+# ATE
+print("ATE")
+model_bc_100m_all$estimates$ATE$psi
+model_bc_100m_all$estimates$ATE$CI
+model_bc_100m_all$estimates$ATE$pvalue
+
+# ATT
+print("ATT")
+model_bc_100m_all$estimates$ATT$psi
+model_bc_100m_all$estimates$ATT$CI
+model_bc_100m_all$estimates$ATT$pvalue
+
+# ATT
+print("ATC")
+model_bc_100m_all$estimates$ATC$psi
+model_bc_100m_all$estimates$ATC$CI
+model_bc_100m_all$estimates$ATC$pvalue
+```
+
+```{r echo=FALSE}
+model_bc_100m_preholc <- tmle(Y = propensity_scores_bc_100m$wells_100m_all_preholc,
+                              A = propensity_scores_bc_100m$treatment,
+                              W = propensity_scores_bc_100m[, c("Score")],
+                              family = "gaussian")
+
+# ATE
+print("ATE")
+model_bc_100m_preholc$estimates$ATE$psi
+model_bc_100m_preholc$estimates$ATE$CI
+model_bc_100m_preholc$estimates$ATE$pvalue
+
+# ATT
+print("ATT")
+model_bc_100m_preholc$estimates$ATT$psi
+model_bc_100m_preholc$estimates$ATT$CI
+model_bc_100m_preholc$estimates$ATT$pvalue
+
+# ATT
+print("ATC")
+model_bc_100m_preholc$estimates$ATC$psi
+model_bc_100m_preholc$estimates$ATC$CI
+model_bc_100m_preholc$estimates$ATC$pvalue
+```
+
+```{r echo=FALSE}
+model_bc_100m_postholc <- tmle(Y = propensity_scores_bc_100m$wells_100m_all_postholc,
+                               A = propensity_scores_bc_100m$treatment,
+                               W = propensity_scores_bc_100m[, c("Score")],
+                               family = "gaussian")
+
+# ATE
+print("ATE")
+model_bc_100m_postholc$estimates$ATE$psi
+model_bc_100m_postholc$estimates$ATE$CI
+model_bc_100m_postholc$estimates$ATE$pvalue
+
+# ATT
+print("ATT")
+model_bc_100m_postholc$estimates$ATT$psi
+model_bc_100m_postholc$estimates$ATT$CI
+model_bc_100m_postholc$estimates$ATT$pvalue
+
+# ATT
+print("ATC")
+model_bc_100m_postholc$estimates$ATC$psi
+model_bc_100m_postholc$estimates$ATC$CI
+model_bc_100m_postholc$estimates$ATC$pvalue
+```
+
+## 1 km exposure
+
+```{r echo=FALSE}
+model_bc_1km_all <- tmle(Y = propensity_scores_bc$wells_1km_all,
+                         A = propensity_scores_bc$treatment,
+                         W = propensity_scores_bc[, c("Score")],
+                         family = "gaussian")
+
+# ATE
+print("ATE")
+model_bc_1km_all$estimates$ATE$psi
+model_bc_1km_all$estimates$ATE$CI
+model_bc_1km_all$estimates$ATE$pvalue
+
+# ATT
+print("ATT")
+model_bc_1km_all$estimates$ATT$psi
+model_bc_1km_all$estimates$ATT$CI
+model_bc_1km_all$estimates$ATT$pvalue
+
+# ATT
+print("ATC")
+model_bc_1km_all$estimates$ATC$psi
+model_bc_1km_all$estimates$ATC$CI
+model_bc_1km_all$estimates$ATC$pvalue
+```
+
+```{r}
+model_bc_1km_preholc <- tmle(Y = propensity_scores_bc$wells_1km_all_preholc,
+                             A = propensity_scores_bc$treatment,
+                             W = propensity_scores_bc[, c("Score")],
+                             family = "gaussian")
+
+# ATE
+print("ATE")
+model_bc_1km_preholc$estimates$ATE$psi
+model_bc_1km_preholc$estimates$ATE$CI
+model_bc_1km_preholc$estimates$ATE$pvalue
+
+# ATT
+print("ATT")
+model_bc_1km_preholc$estimates$ATT$psi
+model_bc_1km_preholc$estimates$ATT$CI
+model_bc_1km_preholc$estimates$ATT$pvalue
+
+# ATT
+print("ATC")
+model_bc_1km_preholc$estimates$ATC$psi
+model_bc_1km_preholc$estimates$ATC$CI
+model_bc_1km_preholc$estimates$ATC$pvalue
+```
+
+```{r}
+model_bc_1km_postholc <- tmle(Y = propensity_scores_bc$wells_1km_all_postholc,
+                              A = propensity_scores_bc$treatment,
+                              W = propensity_scores_bc[, c("Score")],
+                              family = "gaussian")
+
+# ATE
+print("ATE")
+model_bc_1km_postholc$estimates$ATE$psi
+model_bc_1km_postholc$estimates$ATE$CI
+model_bc_1km_postholc$estimates$ATE$pvalue
+
+# ATT
+print("ATT")
+model_bc_1km_postholc$estimates$ATT$psi
+model_bc_1km_postholc$estimates$ATT$CI
+model_bc_1km_postholc$estimates$ATT$pvalue
+
+# ATT
+print("ATC")
+model_bc_1km_postholc$estimates$ATC$psi
+model_bc_1km_postholc$estimates$ATC$CI
+model_bc_1km_postholc$estimates$ATC$pvalue
+```
+
+
+# C-D
+
+## 100 m exposure
+
+```{r include=FALSE}
+##### remove this once we have revised dataset:
+# propensity_scores_cd_100m <- propensity_scores_cd %>%
+#   filter(neighborhood %in% holc_exp$neighborhood)
+```
+
+
+```{r echo=FALSE}
+model_cd_100m_all <- tmle(Y = propensity_scores_cd_100m$wells_100m_all,
+                          A = propensity_scores_cd_100m$treatment,
+                          W = propensity_scores_cd_100m[, c("Score")],
+                          family = "gaussian")
+
+# ATE
+print("ATE")
+model_cd_100m_all$estimates$ATE$psi
+model_cd_100m_all$estimates$ATE$CI
+model_cd_100m_all$estimates$ATE$pvalue
+
+# ATT
+print("ATT")
+model_cd_100m_all$estimates$ATT$psi
+model_cd_100m_all$estimates$ATT$CI
+model_cd_100m_all$estimates$ATT$pvalue
+
+# ATT
+print("ATC")
+model_cd_100m_all$estimates$ATC$psi
+model_cd_100m_all$estimates$ATC$CI
+model_cd_100m_all$estimates$ATC$pvalue
+```
+
+```{r echo=FALSE}
+model_cd_100m_preholc <- tmle(Y = propensity_scores_cd_100m$wells_100m_all_preholc,
+                              A = propensity_scores_cd_100m$treatment,
+                              W = propensity_scores_cd_100m[, c("Score")],
+                              family = "gaussian")
+
+# ATE
+print("ATE")
+model_cd_100m_preholc$estimates$ATE$psi
+model_cd_100m_preholc$estimates$ATE$CI
+model_cd_100m_preholc$estimates$ATE$pvalue
+
+# ATT
+print("ATT")
+model_cd_100m_preholc$estimates$ATT$psi
+model_cd_100m_preholc$estimates$ATT$CI
+model_cd_100m_preholc$estimates$ATT$pvalue
+
+# ATT
+print("ATC")
+model_cd_100m_preholc$estimates$ATC$psi
+model_cd_100m_preholc$estimates$ATC$CI
+model_cd_100m_preholc$estimates$ATC$pvalue
+```
+
+
+```{r echo=FALSE}
+model_cd_100m_postholc <- tmle(Y = propensity_scores_cd_100m$wells_100m_all_postholc,
+                               A = propensity_scores_cd_100m$treatment,
+                               W = propensity_scores_cd_100m[, c("Score")],
+                               family = "gaussian")
+
+# ATE
+print("ATE")
+model_cd_100m_postholc$estimates$ATE$psi
+model_cd_100m_postholc$estimates$ATE$CI
+model_cd_100m_postholc$estimates$ATE$pvalue
+
+# ATT
+print("ATT")
+model_cd_100m_postholc$estimates$ATT$psi
+model_cd_100m_postholc$estimates$ATT$CI
+model_cd_100m_postholc$estimates$ATT$pvalue
+
+# ATT
+print("ATC")
+model_cd_100m_postholc$estimates$ATC$psi
+model_cd_100m_postholc$estimates$ATC$CI
+model_cd_100m_postholc$estimates$ATC$pvalue
+```
+
+
+## 1 km exposure
+
+```{r echo=FALSE}
+model_cd_1km_all <- tmle(Y = propensity_scores_cd$wells_1km_all,
+                         A = propensity_scores_cd$treatment,
+                         W = propensity_scores_cd[, c("Score")],
+                         family = "gaussian")
+
+# ATE
+print("ATE")
+model_cd_1km_all$estimates$ATE$psi
+model_cd_1km_all$estimates$ATE$CI
+model_cd_1km_all$estimates$ATE$pvalue
+
+# ATT
+print("ATT")
+model_cd_1km_all$estimates$ATT$psi
+model_cd_1km_all$estimates$ATT$CI
+model_cd_1km_all$estimates$ATT$pvalue
+
+# ATT
+print("ATC")
+model_cd_1km_all$estimates$ATC$psi
+model_cd_1km_all$estimates$ATC$CI
+model_cd_1km_all$estimates$ATC$pvalue
+```
+
+```{r}
+model_cd_1km_preholc <- tmle(Y = propensity_scores_cd$wells_1km_all_preholc,
+                             A = propensity_scores_cd$treatment,
+                             W = propensity_scores_cd[, c("Score")],
+                             family = "gaussian")
+
+# ATE
+print("ATE")
+model_cd_1km_preholc$estimates$ATE$psi
+model_cd_1km_preholc$estimates$ATE$CI
+model_cd_1km_preholc$estimates$ATE$pvalue
+
+# ATT
+print("ATT")
+model_cd_1km_preholc$estimates$ATT$psi
+model_cd_1km_preholc$estimates$ATT$CI
+model_cd_1km_preholc$estimates$ATT$pvalue
+
+# ATT
+print("ATC")
+model_cd_1km_preholc$estimates$ATC$psi
+model_cd_1km_preholc$estimates$ATC$CI
+model_cd_1km_preholc$estimates$ATC$pvalue
+```
+
+```{r}
+model_cd_1km_postholc <- tmle(Y = propensity_scores_cd$wells_1km_all_postholc,
+                              A = propensity_scores_cd$treatment,
+                              W = propensity_scores_cd[, c("Score")],
+                              family = "gaussian")
+
+# ATE
+print("ATE")
+model_cd_1km_postholc$estimates$ATE$psi
+model_cd_1km_postholc$estimates$ATE$CI
+model_cd_1km_postholc$estimates$ATE$pvalue
+
+# ATT
+print("ATT")
+model_cd_1km_postholc$estimates$ATT$psi
+model_cd_1km_postholc$estimates$ATT$CI
+model_cd_1km_postholc$estimates$ATT$pvalue
+
+# ATT
+print("ATC")
+model_cd_1km_postholc$estimates$ATC$psi
+model_cd_1km_postholc$estimates$ATC$CI
+model_cd_1km_postholc$estimates$ATC$pvalue
+```
+
+
+

@@ -1,0 +1,40 @@
+---
+title: "Memo - Setting up propensity score dataset"
+output: html_notebook
+---
+
+```{r include=FALSE, setup}
+source("../0-setup/01-setup.R")
+```
+
+```{r include=FALSE, data_input}
+holc_census_1940 <- 
+  st_read("../../data/interim/propensity score data/holc_census_1940.shp") %>%
+  st_transform(crs_nad83) %>%
+  st_centroid()
+holc_neighborhoods_exp <- 
+  readRDS("../../data/processed/holc_neighborhoods_exp.rds")
+```
+
+```{r include=FALSE, data_prep}
+# spatial join
+holc_neighborhoods_centroids <-
+  st_read("../../data/raw/univ_richmond/mapping_inequality/shapefile/holc_ad_data.shp") %>%
+  st_transform(crs_nad83) %>%
+  st_centroid()
+holc_neighborhoods_centroids <- holc_neighborhoods_centroids %>%
+  mutate(X = st_coordinates(holc_neighborhoods_centroids)[, 1], 
+         Y = st_coordinates(holc_neighborhoods_centroids)[, 2]) %>%
+  drop_na(X) %>%
+  st_join(holc_census_1940) %>%
+  rename(holc_grade = holc_grade.x) #%>%
+  #drop_na(pop40_w)
+```
+
+```{r}
+holc_neighborhoods_exp2 <- holc_neighborhoods_exp %>%
+  left_join(holc_neighborhoods_centroids) %>%
+  drop_na(fbw40_w)
+```
+
+

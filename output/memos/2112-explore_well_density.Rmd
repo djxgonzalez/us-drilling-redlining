@@ -1,0 +1,50 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r echo=FALSE}
+holc_neighborhoods_exp <- holc_neighborhoods_exp %>%
+  mutate(wells_100m_density_pre  = (wells_100m_all_preholc / area_sqkm),
+         wells_100m_density_post = (wells_100m_all_postholc / area_sqkm)) %>%
+  mutate(wells_change = (wells_100m_all_postholc - wells_100m_all_preholc),
+         density_change = (wells_100m_density_post - wells_100m_density_pre))
+```
+
+```{r}
+d %>% select(neighborhood, wells_100m_all, wells_100m_all_postholc, wells_100m_all_preholc, wells_change) %>% View()
+```
+
+
+```{r echo=FALSE}
+holc_neighborhoods_exp %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  filter(wells_100m_all_preholc > 0 | wells_100m_all_postholc > 0) %>%
+  mutate(wells_change = wells_change /
+           (wells_100m_all_preholc + wells_100m_all_postholc)) %>%
+  ggplot() +
+  geom_violin(aes(holc_grade, wells_change)) +
+  geom_jitter(aes(holc_grade, wells_change), alpha = 0.1) +
+  theme_classic()
+```
+
+
+```{r echo=FALSE}
+holc_neighborhoods_exp %>%
+  filter(holc_grade %in% c("A", "B", "C", "D")) %>%
+  filter(wells_100m_density_pre > 0 | wells_100m_density_post > 0) %>%
+  # mutate(density_change = density_change /
+  #          (wells_100m_all_preholc + wells_100m_all_postholc)) %>%
+  ggplot() +
+  geom_violin(aes(holc_grade, density_change)) +
+  geom_jitter(aes(holc_grade, density_change), alpha = 0.1) +
+  theme_classic()
+```
+
+
+```{r echo=FALSE}
+d <- holc_neighborhoods_exp %>%
+  filter(holc_grade == "D") %>%
+  filter(density_change < -10)
+```
+

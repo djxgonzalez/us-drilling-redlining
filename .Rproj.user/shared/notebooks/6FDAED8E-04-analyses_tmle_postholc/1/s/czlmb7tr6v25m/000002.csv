@@ -1,0 +1,8 @@
+"0","# creates dataset for ltmle function call
+data_tmle = holc_matched_bc_0m[, c(covars_list, 
+                                   ""wells_0m_all_preholc"",
+                                   ""treatment"")]
+"
+"2","Error in `[.data.frame`(holc_matched_bc_0m, , c(covars_list, ""wells_0m_all_preholc"",  : 
+  undefined columns selected
+"

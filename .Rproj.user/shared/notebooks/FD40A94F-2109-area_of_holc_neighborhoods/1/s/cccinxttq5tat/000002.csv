@@ -1,0 +1,30 @@
+"0","neighborhoods_near_wells_3km %>%"
+"2","Warning messages:
+"
+"2","1: "
+"2","In readChar(file, size, TRUE) :"
+"2"," truncating string with embedded nuls
+"
+"2","2: "
+"2","In readChar(file, size, TRUE) :"
+"2"," truncating string with embedded nuls
+"
+"2","3: "
+"2","In readChar(file, size, TRUE) :"
+"2"," truncating string with embedded nuls
+"
+"2","4: "
+"2","In readChar(file, size, TRUE) :"
+"2"," truncating string with embedded nuls
+"
+"2","5: "
+"2","In readChar(file, size, TRUE) :"
+"2"," truncating string with embedded nuls
+"
+"0","  drop_na(holc_grade) %>%"
+"0","  ggplot(aes(holc_grade, area_msquared)) +"
+"0","  geom_boxplot() +"
+"0","  stat_summary(fun = mean, colour = ""darkred"", geom = ""point"", shape = 18, size = 5) +"
+"0","  ylim(0, 4000000) +"
+"0","  coord_flip() +"
+"0","  theme_classic()"
