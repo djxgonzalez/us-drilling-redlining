@@ -1,0 +1,14 @@
+"0","knitr::opts_chunk$set(echo = FALSE)"
+"0","source(""../../code/0-setup/01-setup.R"")"
+"2","
+Attaching package: ‘lubridate’
+
+"
+"2","The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+"
+"2","Linking to GEOS 3.9.1, GDAL 3.4.0, PROJ 8.1.1; sf_use_s2() is TRUE
+"
+"2","GDAL Message 1: +init=epsg:XXXX syntax is deprecated. It might return a CRS with a non-EPSG compliant axis order."

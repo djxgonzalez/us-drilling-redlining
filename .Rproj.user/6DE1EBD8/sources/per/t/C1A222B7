@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1644978949587.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3277196072",
+    "id" : "C1A222B7",
+    "lastKnownWriteTime" : 1644979565,
+    "last_content_update" : 1644979565471,
+    "path" : "~/Documents/Professional/research/projects active/cal drilling proximity/cal-drilling-disparities/output/memos/2202-examining_postprod_wells.Rmd",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "15,17",
+        "last_setup_crc32" : "5DACF0207fc1fd7c",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}
