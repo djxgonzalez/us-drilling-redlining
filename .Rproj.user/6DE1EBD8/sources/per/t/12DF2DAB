@@ -1,25 +1,25 @@
 {
-    "collab_server" : "",
-    "contents" : "",
-    "created" : 1630715595568.000,
-    "dirty" : false,
-    "encoding" : "UTF-8",
-    "folds" : "",
-    "hash" : "3174585487",
-    "id" : "12DF2DAB",
-    "lastKnownWriteTime" : 1643145482,
-    "last_content_update" : 1643145482170,
-    "path" : "~/Documents/Professional/research/projects active/us redlining drilling/us-drilling-redlining/code/run_all.R",
-    "project_path" : "code/run_all.R",
-    "properties" : {
-        "cursorPosition" : "46,75",
-        "scrollLine" : "0"
+    "id": "12DF2DAB",
+    "path": "~/Documents/Professional/research/projects active/us redlining drilling/us-drilling-redlining/code/run_all.R",
+    "project_path": "code/run_all.R",
+    "type": "r_source",
+    "hash": "3174585487",
+    "contents": "",
+    "dirty": false,
+    "created": 1630715595568.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "cursorPosition": "46,75",
+        "scrollLine": "0",
+        "Source": "Source"
     },
-    "read_only" : false,
-    "read_only_alternatives" : [
-    ],
-    "relative_order" : 1,
-    "source_on_save" : false,
-    "source_window" : "",
-    "type" : "r_source"
+    "folds": "",
+    "lastKnownWriteTime": 1643145482,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1643145482170,
+    "read_only": false,
+    "read_only_alternatives": []
 }

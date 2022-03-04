@@ -11,7 +11,7 @@
   - Joan A. Casey, Columbia University, jac2250@cumc.columbia.edu, orcid.org/0000-0002-9809-4695
 - **Journals:**
   1. Environmental Health (APC: $2,790)[submitted: 1.26.2022; desk rejection 1.31.2022]
-  2. Journal of Exposure Science and Environmental Epidemiology (JESEE) (APC: $4,480) [submitted: 1.31.2022]
+  2. Journal of Exposure Science and Environmental Epidemiology (JESEE) (APC: $4,480) [submitted: 1.31.2022; revision submitted 3.3.2022]
   3. Journal of Urban Health
   4. Environmental Science & Technology (ES&T)
   5. Environmental Justice [may be a good home for the Los Angeles study]
@@ -37,8 +37,13 @@ The corresponding author is Dr. David J.X. Gonzalez at the University of Califor
 ### Tasks
 - organize code and prep to post on GitHub
 - re-submit and/or respond to reviewers as needed
+- add Williams et al. (2021) citation for abandoned wells; maybe glean some details
 
 ---
+
+### 03.03.2022 Th
+- We got minor revisions from JESEE and some very positive (and kind) comments from peer reviewers
+- I made the revisions and re-submitted in the evening
 
 ### 01.31.2022 M
 - We got a desk rejection from Environmental Health; the editor did not think our study was a good fit (despite a recently-published call for more studies of structural racism in environmental health sciences)
